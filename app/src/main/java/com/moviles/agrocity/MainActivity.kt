@@ -10,6 +10,6 @@ class MainActivity : AppCompatActivity() {
 
         // Navegar directamente a LoginActivity
         startActivity(Intent(this, LoginActivity::class.java))
-        finish()
+
     }
 }

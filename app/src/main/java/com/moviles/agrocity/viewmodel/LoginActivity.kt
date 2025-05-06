@@ -2,87 +2,167 @@ package com.moviles.agrocity
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import retrofit2.Response
+import kotlinx.coroutines.withContext
 
-class LoginActivity : AppCompatActivity() {
-
+class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
-
-        val etEmail = findViewById<EditText>(R.id.etEmail)
-        val etPassword = findViewById<EditText>(R.id.etPassword)
-        val btnLogin = findViewById<Button>(R.id.btnLogin)
-        val tvRegister = findViewById<TextView>(R.id.tvRegister)
-        val tvForgotPassword = findViewById<TextView>(R.id.tvForgotPassword)
-
-        // Configurar el botón de login
-        btnLogin.setOnClickListener {
-            val email = etEmail.text.toString().trim()
-            val password = etPassword.text.toString().trim()
-
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Ingrese email y contraseña", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            loginUser(email, password)
-        }
-
-        // Placeholders para futuras implementaciones
-        tvRegister.setOnClickListener {
-            val intent = Intent(this@LoginActivity, RegisterActivity::class.java)
-            startActivity(intent)
-            // Opcional: finish() si quieres cerrar el LoginActivity al ir al registro
-            // finish()
-        }
-
-        tvForgotPassword.setOnClickListener {
-            Toast.makeText(this, "Funcionalidad de recuperación en desarrollo", Toast.LENGTH_SHORT).show()
+        setContent {
+            LoginScreen()
         }
     }
+}
 
-    private fun loginUser(email: String, password: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response: Response<Map<String, Any>> =
-                    RetrofitInstance.api.loginUser(LoginDTO(email, password))
+@Composable
+fun LoginScreen() {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
-                runOnUiThread {
-                    if (response.isSuccessful) {
-                        Toast.makeText(this@LoginActivity, "¡Bienvenido a Agricity!", Toast.LENGTH_SHORT).show()
-                        // Navegar a la actividad principal
-                        startActivity(Intent(this@LoginActivity, MainActivity::class.java))
-                        finish()
-                    } else {
-                        val errorMsg = when (response.code()) {
-                            401 -> "Credenciales incorrectas"
-                            else -> "Error en el login (${response.code()})"
-                        }
-                        Toast.makeText(this@LoginActivity, errorMsg, Toast.LENGTH_LONG).show()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp)
+            .background(Color.White),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Título
+        Text(
+            text = "AGROCITY",
+            color = Color(0xFF4CAF50),
+            fontSize = 36.sp,
+            modifier = Modifier.padding(bottom = 48.dp)
+        )
+
+        // Mensaje de bienvenida
+        Text(
+            text = "¡Bienvenido!",
+            color = Color.Black,
+            fontSize = 24.sp,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        // Campo de email
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Correo electrónico") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            shape = RoundedCornerShape(8.dp)
+        )
+
+        // Campo de contraseña
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+            shape = RoundedCornerShape(8.dp)
+        )
+
+        // Botón de login
+        Button(
+            onClick = {
+                if (email.isEmpty() || password.isEmpty()) {
+                    showToast(context, "Por favor ingrese email y contraseña")
+                } else if (!isValidEmail(email)) {
+                    showToast(context, "Ingrese un correo electrónico válido")
+                } else {
+                    loginUser(email, password, context)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+        ) {
+            Text("Iniciar Sesión", color = Color.White)
+        }
+
+        // Enlaces
+        Row(
+            modifier = Modifier.padding(top = 16.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            TextButton(
+                onClick = {
+                    context.startActivity(Intent(context, RegisterActivity::class.java))
+                }
+            ) {
+                Text("Registrarse", color = Color(0xFF4CAF50))
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            TextButton(
+                onClick = {
+                    showToast(context, "Funcionalidad en desarrollo")
+                }
+            ) {
+                Text("Olvidé mi contraseña", color = Color(0xFF4CAF50))
+            }
+        }
+    }
+}
+private fun loginUser(email: String, password: String, context: android.content.Context) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val response = RetrofitInstance.api.loginUser(LoginDTO(email, password))
+
+            withContext(Dispatchers.Main) {
+                if (response.isSuccessful) {
+                    showToast(context, "¡Bienvenido a AgroCity!")
+                    // Puedes dejar el Intent o comentarlo si no quieres avanzar
+                    // context.startActivity(Intent(context, MainActivity::class.java))
+                } else {
+                    when (response.code()) {
+                        401 -> showToast(context, "Correo o contraseña incorrectos")
+                        404 -> showToast(context, "Usuario no encontrado")
+                        else -> showToast(context, "Error al iniciar sesión")
                     }
                 }
-            } catch (e: Exception) {
-                Log.e("API_CONNECTION", "Error: ${e.message}")
-                runOnUiThread {
-                    Toast.makeText(
-                        this@LoginActivity,
-                        "Error de conexión: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                showToast(context, "Error de conexión: ${e.message}")
             }
         }
     }
+}
+
+private fun isValidEmail(email: String): Boolean {
+    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+}
+
+private fun showToast(context: android.content.Context, message: String) {
+    android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_LONG).show()
 }
