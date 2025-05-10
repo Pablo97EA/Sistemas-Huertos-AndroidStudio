@@ -1,6 +1,9 @@
+import com.moviles.agrocity.models.Garden
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.models.RegisterDTO
 import com.moviles.agrocity.models.User
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -26,4 +29,34 @@ interface ApiService {
 
     @GET("api/users/{id}")
     suspend fun getUserById(@Path("id") id: Int): Response<User>
+
+
+
+    //Garden
+    @GET("api/garden")
+    suspend fun getGardens(): List<Garden>
+
+
+    @POST("api/garden")
+    @Multipart
+    suspend fun addGarden(
+        @Part("Name") name: RequestBody?,
+        @Part("Description") description: RequestBody?,
+        @Part("Schedule") schedule: RequestBody?,
+        @Part("Professor") professor: RequestBody?,
+        @Part image: MultipartBody.Part?
+    ): Garden
+
+
+
+    @PUT("api/garden/{id}")
+    suspend fun updateGarden(@Path("id") id: Int, @Body garden: Garden): Garden
+
+    @DELETE("api/garden/{id}")
+    suspend fun deleteGarden(@Path("id") id: Int): Response<Unit>
+
+
+    @GET("api/garden/{id}")
+    suspend fun getGardenById(@Path("id") id: Int): Garden
+
 }

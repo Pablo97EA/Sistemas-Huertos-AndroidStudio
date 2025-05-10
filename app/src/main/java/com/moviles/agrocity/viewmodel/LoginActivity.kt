@@ -31,6 +31,8 @@ class LoginActivity : ComponentActivity() {
         setContent {
             LoginScreen()
         }
+
+
     }
 }
 
@@ -143,6 +145,11 @@ private fun loginUser(email: String, password: String, context: android.content.
                     showToast(context, "¡Bienvenido a AgroCity!")
                     // Puedes dejar el Intent o comentarlo si no quieres avanzar
                     // context.startActivity(Intent(context, MainActivity::class.java))
+
+                    //para que luego de loguearse aparesca al garden activity
+                    //val intent = Intent(context, GardenActivity::class.java)
+                   // context.startActivity(intent)
+
                 } else {
                     when (response.code()) {
                         401 -> showToast(context, "Correo o contraseña incorrectos")
