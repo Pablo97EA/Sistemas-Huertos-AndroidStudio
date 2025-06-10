@@ -141,8 +141,14 @@ private fun loginUser(email: String, password: String, context: android.content.
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
                     showToast(context, "¡Bienvenido a AgroCity!")
-                    // Puedes dejar el Intent o comentarlo si no quieres avanzar
-                    // context.startActivity(Intent(context, MainActivity::class.java))
+                    val intent = Intent(context, GeminiImageAnalysisActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    context.startActivity(intent)
+
+                    if (context is LoginActivity) {
+                        (context as LoginActivity).finish()
+                    }
+
                 } else {
                     when (response.code()) {
                         401 -> showToast(context, "Correo o contraseña incorrectos")
