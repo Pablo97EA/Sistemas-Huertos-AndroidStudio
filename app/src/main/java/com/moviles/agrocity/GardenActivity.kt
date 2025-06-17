@@ -1,8 +1,10 @@
 package com.moviles.agrocity
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,16 +53,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
+import com.moviles.agrocity.common.Constants
+import com.moviles.agrocity.common.Constants.IMAGES_BASE_URL
 import com.moviles.agrocity.models.Garden
 import com.moviles.agrocity.ui.theme.AgrocityTheme
 import com.moviles.agrocity.viewmodel.GardenViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 
 class GardenActivity : ComponentActivity() {
@@ -70,53 +80,28 @@ class GardenActivity : ComponentActivity() {
         setContent {
             AgrocityTheme {
                 val viewModel: GardenViewModel = viewModel()
-                GardenScreen(viewModel)
+                // Pasar userId fijo, por ejemplo 1
+                GardenScreen(viewModel = viewModel, userId = 1)
             }
         }
     }
-
-
 }
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AgrocityTheme{
-        Greeting("Android")
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GardenScreenPreview(){
-    AgrocityTheme {
-        var viewModel: GardenViewModel = viewModel()
-        GardenScreen(viewModel)
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GardenScreen(viewModel: GardenViewModel) {
-
+fun GardenScreen(viewModel: GardenViewModel, userId: Int) {
     val gardens by viewModel.gardens.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     var selectedGarden by remember { mutableStateOf<Garden?>(null) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
 
-
-    LaunchedEffect(Unit) {
-        Log.i("Activity", "Coming here???")
+    LaunchedEffect(userId) {
         viewModel.fetchGardens()
     }
+    LaunchedEffect(userId) {
+        viewModel.fetchGardensByUser(userId)
+    }
+
 
     Scaffold(
         topBar = {
@@ -128,6 +113,7 @@ fun GardenScreen(viewModel: GardenViewModel) {
             FloatingActionButton(
                 onClick = {
                     selectedGarden = null
+                    imageUri = null
                     showDialog = true
                 },
                 containerColor = MaterialTheme.colorScheme.secondary
@@ -135,50 +121,63 @@ fun GardenScreen(viewModel: GardenViewModel) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar Jardín")
             }
         }
-
-
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
-            // Button with padding
             Button(
                 modifier = Modifier
-                    .padding(16.dp) // Add padding around the button
+                    .padding(16.dp)
                     .fillMaxWidth(),
                 onClick = { viewModel.fetchGardens() }
             ) {
-                Text("Refrescar Events")
+                Text("Refrescar Jardines")
             }
-
-            // Spacer to ensure some space between button and the list
             Spacer(modifier = Modifier.height(8.dp))
 
-            GardenList(gardens,
+            GardenList(
+                gardens = gardens,
                 onEdit = { garden ->
                     selectedGarden = garden
+                    imageUri = garden.imageUrl?.let { Uri.parse(it) }
                     showDialog = true
                 },
-                onDelete = { garden -> viewModel.deleteGarden(garden.gardenId) })
+                onDelete = { garden ->
+                    viewModel.deleteGarden(garden.gardenId)
+                }
+            )
         }
     }
+
     if (showDialog) {
-        val context = LocalContext.current
         GardenDialog(
             garden = selectedGarden,
-            onDismiss = { showDialog = false },
-            onSave = { garden ->
-                if (garden.gardenId == 0) viewModel.addGarden(garden, imageUri, context)
-                else viewModel.updateGarden(garden)
+            onDismiss = {
                 showDialog = false
+                imageUri = null
+            },
+            onSave = { garden ->
+                if (garden.gardenId == 0) {
+                    viewModel.addGarden(garden, imageUri, context, userId)
+                } else {
+                    viewModel.updateGarden(garden, imageUri, context, userId)
+                }
+                viewModel.fetchGardensByUser(userId) // Refrescar lista de jardines
+                showDialog = false
+                imageUri = null
             },
             imageUri = imageUri,
-            onImageSelected = { uri -> imageUri = uri }
+            onImageSelected = { uri -> imageUri = uri },
+            userId = userId
         )
     }
-
 }
 
 @Composable
-fun GardenList(gardens: List<Garden>, onEdit: (Garden) -> Unit, onDelete: (Garden) -> Unit, modifier: Modifier = Modifier) {
+fun GardenList(
+    gardens: List<Garden>,
+    onEdit: (Garden) -> Unit,
+    onDelete: (Garden) -> Unit,
+    modifier: Modifier = Modifier
+) {
     LazyColumn(modifier = modifier.padding(16.dp)) {
         items(gardens) { garden ->
             GardenItem(garden = garden, onEdit = onEdit, onDelete = onDelete)
@@ -187,35 +186,55 @@ fun GardenList(gardens: List<Garden>, onEdit: (Garden) -> Unit, onDelete: (Garde
 }
 
 @Composable
-fun GardenItem(garden: Garden, onEdit: (Garden) -> Unit, onDelete: (Garden) -> Unit) {
+fun GardenItem(
+    garden: Garden,
+    onEdit: (Garden) -> Unit,
+    onDelete: (Garden) -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
         elevation = CardDefaults.elevatedCardElevation(8.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Mostrar el userId si es necesario
-            Text(text = "User ID: ${garden.userId}", style = MaterialTheme.typography.bodySmall)
+
+            garden.userName?.let {
+                Text(text = "👤 Usuario: $it", style = MaterialTheme.typography.bodySmall)
+            }
+
             Text(text = garden.name, style = MaterialTheme.typography.titleLarge)
             Text(text = garden.description, style = MaterialTheme.typography.bodyMedium)
             Text(text = "🌱 Created At: ${garden.createdAt}", style = MaterialTheme.typography.bodySmall)
 
-            // Si hay una URL de imagen, mostrar la imagen
+
             garden.imageUrl?.let {
-                Image(painter = rememberImagePainter(it), contentDescription = "Garden Image", modifier = Modifier.fillMaxWidth().height(200.dp))
+                Image(
+                    painter = rememberAsyncImagePainter(IMAGES_BASE_URL + it),
+                    contentDescription = "Garden Image",
+                    modifier = Modifier
+                        .size(80.dp) // Tamaño de la imagen
+                        .clip(RoundedCornerShape(8.dp)) // Forma de la imagen
+                        .background(MaterialTheme.colorScheme.surface), // Fondo
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.width(16.dp)) // Espacio entre la imagen y el texto
             }
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 TextButton(onClick = { onEdit(garden) }) {
-                    Text("Edit", color = MaterialTheme.colorScheme.primary)
+                    Text("Editar", color = MaterialTheme.colorScheme.primary)
                 }
                 TextButton(onClick = { onDelete(garden) }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
                 }
             }
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -237,7 +256,7 @@ fun DatePickerModal(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text("Cancelar")
             }
         }
     ) {
@@ -245,22 +264,23 @@ fun DatePickerModal(
     }
 }
 
-
 @Composable
 fun GardenDialog(
     garden: Garden?,
     onDismiss: () -> Unit,
     onSave: (Garden) -> Unit,
     imageUri: Uri?,
-    onImageSelected: (Uri?) -> Unit
+    onImageSelected: (Uri?) -> Unit,
+    userId: Int
 ) {
     var name by remember { mutableStateOf(garden?.name ?: "") }
     var description by remember { mutableStateOf(garden?.description ?: "") }
     var createdAt by remember { mutableStateOf(garden?.createdAt ?: "") }
     var showDatePicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-        onImageSelected(it)
+    val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        onImageSelected(uri)
     }
 
     AlertDialog(
@@ -271,28 +291,33 @@ fun GardenDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Nombre") }
+                    label = { Text("Nombre") },
+                    singleLine = true
                 )
+                Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Descripción") }
+                    label = { Text("Descripción") },
+                    maxLines = 3
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                         .clickable { showDatePicker = true }
-                        .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(50))
-                        .border(2.dp, MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(50))
-                        .padding(12.dp)
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50))
+                        .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(50))
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
                         text = if (createdAt.isEmpty()) "Seleccionar Fecha" else createdAt,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
 
@@ -305,7 +330,7 @@ fun GardenDialog(
 
                 imageUri?.let {
                     Image(
-                        painter = rememberImagePainter(it),
+                        painter = rememberAsyncImagePainter(it),
                         contentDescription = "Imagen seleccionada",
                         modifier = Modifier
                             .padding(top = 8.dp)
@@ -318,14 +343,28 @@ fun GardenDialog(
         },
         confirmButton = {
             Button(onClick = {
+                if (name.isBlank()) {
+                    Toast.makeText(context, "El nombre es obligatorio", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+                val formattedCreatedAt = if (createdAt is String) {
+                    createdAt
+                } else {
+                    // Si es Date o Calendar, formatear así
+                    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    dateFormat.format(createdAt)
+                }
+
                 val updatedGarden = Garden(
                     gardenId = garden?.gardenId ?: 0,
-                    userId = garden?.userId,  // o asigna el userId actual si es obligatorio
-                    name = name,
-                    description = description,
-                    createdAt = createdAt,
-                    imageUrl = imageUri?.toString()
+                    userId = userId,
+                    name = name.trim(),
+                    description = description.trim(),
+                    createdAt = formattedCreatedAt,
+                    imageUrl = imageUri?.toString(),
+                    userName = garden?.userName
                 )
+
                 onSave(updatedGarden)
             }) {
                 Text("Guardar")
@@ -351,4 +390,5 @@ fun GardenDialog(
         )
     }
 }
+
 

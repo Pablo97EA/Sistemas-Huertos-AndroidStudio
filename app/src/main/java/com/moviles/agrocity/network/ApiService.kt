@@ -33,30 +33,55 @@ interface ApiService {
 
 
     //Garden
-    @GET("api/garden")
+    @GET("api/Garden")
     suspend fun getGardens(): List<Garden>
 
 
-    @POST("api/garden")
+    @GET("api/Garden/garden/{userId}")
+    suspend fun getGardensByUserId(@Path("userId") id: Int): List<Garden>
+
+
+
+
+
+
+    @GET("api/Garden/{gardenId}")
+    suspend fun getGardenById(@Path("gardenId") id: Int): Garden
+
+
     @Multipart
+    @POST("api/Garden")
     suspend fun addGarden(
-        @Part("Name") name: RequestBody?,
-        @Part("Description") description: RequestBody?,
-        @Part("Schedule") schedule: RequestBody?,
-        @Part("Professor") professor: RequestBody?,
-        @Part image: MultipartBody.Part?
+        @Part("UserId") userId: RequestBody,
+        @Part("Name") name: RequestBody,
+        @Part("Description") description: RequestBody,
+        @Part("CreatedAt") createdAt: RequestBody,
+        @Part file: MultipartBody.Part?
+    ): Garden
+
+    @Multipart
+    @PUT("api/Garden/{gardenId}")
+    suspend fun updateGarden(
+        @Path("gardenId") id: Int,
+        @Part("UserId") userId: RequestBody,
+        @Part("Name") name: RequestBody,
+        @Part("Description") description: RequestBody,
+        @Part("CreatedAt") createdAt: RequestBody,
+        @Part file: MultipartBody.Part?
     ): Garden
 
 
-
-    @PUT("api/garden/{id}")
-    suspend fun updateGarden(@Path("id") id: Int, @Body garden: Garden): Garden
-
-    @DELETE("api/garden/{id}")
-    suspend fun deleteGarden(@Path("id") id: Int): Response<Unit>
+    @DELETE("api/Garden/{gardenId}")
+    suspend fun deleteGarden(@Path("gardenId") id: Int): Response<Unit>
 
 
-    @GET("api/garden/{id}")
-    suspend fun getGardenById(@Path("id") id: Int): Garden
+
+
+
+
+
+
+
+
 
 }

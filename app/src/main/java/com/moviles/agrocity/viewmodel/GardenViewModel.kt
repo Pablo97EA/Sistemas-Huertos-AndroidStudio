@@ -1,8 +1,11 @@
 package com.moviles.agrocity.viewmodel
 
+
+
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.moviles.agrocity.models.Garden
@@ -16,46 +19,65 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlin.collections.plus
 
 class GardenViewModel : ViewModel() {
 
-    private val _garden = MutableStateFlow<List<Garden>>(emptyList())
-    val gardens: StateFlow<List<Garden>> get() = _garden
 
+    private val _gardens = MutableStateFlow<List<Garden>>(emptyList())
+    val gardens: StateFlow<List<Garden>> = _gardens
+
+
+
+
+
+    fun fetchGardensByUser(userId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitInstance.api.getGardensByUserId(userId)
+                _gardens.value = response
+            } catch (e: Exception) {
+                Log.e("GardenViewModel", "Error al obtener los jardines: ${e.message}", e)
+            }
+        }
+    }
     fun fetchGardens() {
         viewModelScope.launch {
             try {
-                _garden.value = RetrofitInstance.api.getGardens()
-                Log.i("MyViewModel", "Fetching data from API... ${_garden.value}")
+                _gardens.value = RetrofitInstance.api.getGardens()
+                Log.i("MyViewModel", "Fetching data from API... ${_gardens.value}")
             } catch (e: Exception) {
                 Log.e("ViewmodelError", "Error: ${e}")
             }
         }
     }
 
-    fun addGarden(garden: Garden, imageUri: Uri?, context: Context) {
+
+    fun addGarden(garden: Garden, imageUri: Uri?, context: Context, userId: Int) {
         viewModelScope.launch {
             try {
-                val namePart = garden.name?.toRequestBody("text/plain".toMediaTypeOrNull())
-                val descriptionPart = garden.description?.toRequestBody("text/plain".toMediaTypeOrNull())
-                val createdAtPart = garden.createdAt?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull())
-                val userIdPart = garden.userId?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull())
+                // Convertir los campos a RequestBody
+                val userIdPart = userId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
 
+                val namePart = garden.name.toRequestBody("text/plain".toMediaTypeOrNull())
+                val descriptionPart = garden.description.toRequestBody("text/plain".toMediaTypeOrNull())
+                val createdAtPart = garden.createdAt.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                // Convertir Uri a MultipartBody.Part
                 val filePart = imageUri?.let {
                     val file = FileUtils.getFileFromUri(context, it)
                     val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
                     MultipartBody.Part.createFormData("File", file.name, requestFile)
                 }
-
-                // Llamada a la API
+                // Llamar a la API
                 val response = RetrofitInstance.api.addGarden(
-                    namePart,
-                    descriptionPart,
-                    createdAtPart,
-                    userIdPart,
-                    filePart
+                    userIdPart, namePart, descriptionPart, createdAtPart, filePart
                 )
-
+                fetchGardensByUser(userId)
+                _gardens.value += response
                 Log.i("ViewModelInfo", "Jardín creado exitosamente: $response")
             } catch (e: HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
@@ -66,20 +88,55 @@ class GardenViewModel : ViewModel() {
         }
     }
 
-    fun updateGarden(garden: Garden) {
+
+
+
+    fun updateGarden(garden: Garden, imageUri: Uri?, context: Context, userId: Int) {
         viewModelScope.launch {
             try {
-                Log.i("ViewModelInfo", "Garden: $garden")
-
-                // Llamada a la API
-                val response = RetrofitInstance.api.updateGarden(garden.gardenId, garden)
-
-                // Actualizar el estado de los gardens en el ViewModel
-                _garden.value = _garden.value.map { g ->
-                    if (g.gardenId == response.gardenId) response else g
+                // Aseguramos que CreatedAt tenga formato ISO 8601 (yyyy-MM-dd)
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val createdAtString = try {
+                    // Si garden.createdAt es String ya en formato ISO, úsalo directo
+                    // Si es Date, formatealo aquí (aquí asumimos String, ajusta si tienes Date)
+                    dateFormat.format(dateFormat.parse(garden.createdAt))
+                } catch (e: Exception) {
+                    // Si no se puede parsear, enviamos la fecha actual para no romper
+                    dateFormat.format(Date())
                 }
 
-                Log.i("ViewModelInfo", "Garden actualizado: $response")
+                // Convertimos campos a RequestBody
+                val userIdPart = userId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+                val namePart = garden.name.toRequestBody("text/plain".toMediaTypeOrNull())
+                val descriptionPart = (garden.description ?: "").toRequestBody("text/plain".toMediaTypeOrNull())
+                val createdAtPart = createdAtString.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                // Convertir Uri a MultipartBody.Part si hay imagen nueva
+                val filePart = imageUri?.let {
+                    val file = FileUtils.getFileFromUri(context, it)
+                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                    MultipartBody.Part.createFormData("File", file.name, requestFile)
+                }
+
+                // Llamar a la API para actualizar jardín
+                val response = RetrofitInstance.api.updateGarden(
+                    garden.gardenId,
+                    userIdPart,
+                    namePart,
+                    descriptionPart,
+                    createdAtPart,
+                    filePart
+                )
+
+                // Refrescar lista
+                fetchGardensByUser(userId)
+
+                // Actualizar lista localmente
+                _gardens.value = _gardens.value.map {
+                    if (it.gardenId == garden.gardenId) response else it
+                }
+
+                Log.i("ViewModelInfo", "Jardín actualizado exitosamente: $response")
             } catch (e: HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
                 Log.e("ViewModelError", "HTTP Error: ${e.message()}, Response Body: $errorBody")
@@ -90,19 +147,26 @@ class GardenViewModel : ViewModel() {
     }
 
 
+
+
+
     fun deleteGarden(gardenId: Int?) {
         gardenId?.let { id ->
             viewModelScope.launch {
                 try {
-                    RetrofitInstance.api.deleteGarden(id)
-                    _garden.value = _garden.value.filter { it.gardenId != gardenId }
+                    val response = RetrofitInstance.api.deleteGarden(id)
+                    if (response.isSuccessful) {
+                        _gardens.value = _gardens.value.filter { it.gardenId != id }
+                        Log.i("GardenViewModel", "Garden deleted: $id")
+                    } else {
+                        Log.e("GardenViewModel", "Error deleting garden: ${response.errorBody()?.string()}")
+                    }
                 } catch (e: Exception) {
-                    Log.e("ViewModelError", "Error deleting garden: ${e.message}")
+                    Log.e("GardenViewModel", "Error deleting garden: ${e.message}")
                 }
             }
-        } ?: Log.e("ViewModelError", "Error: gardenId is null")
+        } ?: Log.e("GardenViewModel", "Error: gardenId is null")
     }
-
 
     object FileUtils {
         fun getFileFromUri(context: Context, uri: Uri): File {
@@ -114,5 +178,4 @@ class GardenViewModel : ViewModel() {
             return tempFile
         }
     }
-
 }

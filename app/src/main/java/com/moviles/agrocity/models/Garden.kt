@@ -1,5 +1,8 @@
 package com.moviles.agrocity.models
 
+import com.google.gson.annotations.SerializedName
+
+
 data class Garden(
     val gardenId: Int,
     val userId: Int?,
@@ -7,5 +10,9 @@ data class Garden(
     val description: String,
     val createdAt: String,
     val imageUrl: String?,
-    //val user: User? = null
+    val userName: String?
 )
+
+
+
+
