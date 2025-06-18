@@ -1,7 +1,11 @@
-package com.moviles.agrocity
+package com.moviles.agrocity.viewmodel
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Patterns
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -18,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.moviles.agrocity.MainActivity
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +33,14 @@ import kotlinx.coroutines.withContext
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val prefs = getSharedPreferences("AgroCityPrefs", MODE_PRIVATE)
+        val isLoggedIn = prefs.getBoolean("isLoggedIn", false)
+
+        if (isLoggedIn) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
         setContent {
             LoginScreen()
         }
@@ -133,16 +146,33 @@ fun LoginScreen() {
         }
     }
 }
-private fun loginUser(email: String, password: String, context: android.content.Context) {
+@SuppressLint("CommitPrefEdits")
+private fun loginUser(email: String, password: String, context: Context) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
             val response = RetrofitInstance.api.loginUser(LoginDTO(email, password))
 
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
-                    showToast(context, "¡Bienvenido a AgroCity!")
-                    // Puedes dejar el Intent o comentarlo si no quieres avanzar
-                    // context.startActivity(Intent(context, MainActivity::class.java))
+                    val body = response.body()
+                    val token = body?.get("token") as? String
+
+                    if (!token.isNullOrEmpty()) {
+                        // Guardar token en SharedPreferences
+                        val prefs = context.getSharedPreferences("AgroCityPrefs", Context.MODE_PRIVATE)
+                        prefs.edit()
+                            .putString("authToken", token)
+                            .putBoolean("isLoggedIn", true)
+
+
+                        showToast(context, "¡Bienvenido a AgroCity!")
+
+                        // Redirigir a MainActivity
+                        context.startActivity(Intent(context, MainActivity::class.java))
+                        (context as? ComponentActivity)?.finish()
+                    } else {
+                        showToast(context, "Token inválido")
+                    }
                 } else {
                     when (response.code()) {
                         401 -> showToast(context, "Correo o contraseña incorrectos")
@@ -159,10 +189,11 @@ private fun loginUser(email: String, password: String, context: android.content.
     }
 }
 
+
 private fun isValidEmail(email: String): Boolean {
-    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    return Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }
 
-private fun showToast(context: android.content.Context, message: String) {
-    android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_LONG).show()
+private fun showToast(context: Context, message: String) {
+    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 }
