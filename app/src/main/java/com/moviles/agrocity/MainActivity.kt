@@ -9,7 +9,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // Navegar directamente a LoginActivity
-        startActivity(Intent(this, LoginActivity::class.java))
+       // startActivity(Intent(this, LoginActivity::class.java))
+        startActivity(Intent(this, GardenActivity::class.java))
+        finish()
 
     }
 }

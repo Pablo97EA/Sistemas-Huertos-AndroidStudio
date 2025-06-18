@@ -31,6 +31,8 @@ class LoginActivity : ComponentActivity() {
         setContent {
             LoginScreen()
         }
+
+
     }
 }
 
@@ -141,6 +143,13 @@ private fun loginUser(email: String, password: String, context: android.content.
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
                     showToast(context, "¡Bienvenido a AgroCity!")
+Crud-garden
+                    // Puedes dejar el Intent o comentarlo si no quieres avanzar
+                    // context.startActivity(Intent(context, MainActivity::class.java))
+
+                    //para que luego de loguearse aparesca al garden activity
+                    //val intent = Intent(context, GardenActivity::class.java)
+                   // context.startActivity(intent)
                     val intent = Intent(context, GeminiImageAnalysisActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     context.startActivity(intent)
@@ -148,6 +157,7 @@ private fun loginUser(email: String, password: String, context: android.content.
                     if (context is LoginActivity) {
                         (context as LoginActivity).finish()
                     }
+ main
 
                 } else {
                     when (response.code()) {
