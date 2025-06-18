@@ -85,4 +85,10 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
+    // Gemini / HTTP + JSON
+    implementation(libs.okhttp)
+    implementation(libs.orgjson)
+    implementation ("com.google.accompanist:accompanist-permissions:0.30.1")
+
 }
