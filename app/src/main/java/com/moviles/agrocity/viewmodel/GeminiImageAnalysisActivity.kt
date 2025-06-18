@@ -1,4 +1,4 @@
-package com.moviles.agrocity
+package com.moviles.agrocity.viewmodel
 
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.permissions.*
+import com.moviles.agrocity.R
 import com.moviles.agrocity.network.GeminiClient
 
 class GeminiImageAnalysisActivity : ComponentActivity() {

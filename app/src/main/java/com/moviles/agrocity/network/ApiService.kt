@@ -1,3 +1,4 @@
+import com.moviles.agrocity.models.ForgotPasswordDTO
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.models.RegisterDTO
 import com.moviles.agrocity.models.User
@@ -26,4 +27,9 @@ interface ApiService {
 
     @GET("api/users/{id}")
     suspend fun getUserById(@Path("id") id: Int): Response<User>
+
+    @POST("auth/forgot-password")
+    suspend fun forgotPassword(@Body dto: ForgotPasswordDTO): Response<Void>
+
+
 }

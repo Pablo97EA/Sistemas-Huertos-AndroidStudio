@@ -1,4 +1,4 @@
-package com.moviles.agrocity
+package com.moviles.agrocity.viewmodel
 
 import android.content.Intent
 import android.os.Bundle
@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.gson.Gson
+import com.moviles.agrocity.MainActivity
 import com.moviles.agrocity.models.RegisterDTO
 import com.moviles.agrocity.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
