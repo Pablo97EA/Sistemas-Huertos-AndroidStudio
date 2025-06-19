@@ -1,7 +1,10 @@
-package com.moviles.agrocity
+package com.moviles.agrocity.viewmodel
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Patterns
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -18,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.moviles.agrocity.GeminiImageAnalysisActivity
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
@@ -135,7 +139,7 @@ fun LoginScreen() {
         }
     }
 }
-private fun loginUser(email: String, password: String, context: android.content.Context) {
+private fun loginUser(email: String, password: String, context: Context) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
             val response = RetrofitInstance.api.loginUser(LoginDTO(email, password))
@@ -143,7 +147,7 @@ private fun loginUser(email: String, password: String, context: android.content.
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
                     showToast(context, "¡Bienvenido a AgroCity!")
-Crud-garden
+
                     // Puedes dejar el Intent o comentarlo si no quieres avanzar
                     // context.startActivity(Intent(context, MainActivity::class.java))
 
@@ -157,7 +161,7 @@ Crud-garden
                     if (context is LoginActivity) {
                         (context as LoginActivity).finish()
                     }
- main
+
 
                 } else {
                     when (response.code()) {
@@ -176,9 +180,9 @@ Crud-garden
 }
 
 private fun isValidEmail(email: String): Boolean {
-    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    return Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }
 
-private fun showToast(context: android.content.Context, message: String) {
-    android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_LONG).show()
+private fun showToast(context: Context, message: String) {
+    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 }
