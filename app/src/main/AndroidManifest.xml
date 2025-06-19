@@ -38,10 +38,6 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 
-</manifest>
-        <activity
-            android:name=".viewmodel.RegisterActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-    </application>
+
 
 </manifest>

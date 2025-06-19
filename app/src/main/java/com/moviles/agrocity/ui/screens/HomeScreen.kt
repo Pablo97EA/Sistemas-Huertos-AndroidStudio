@@ -13,12 +13,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun HomeScreen(onGoToPests: () -> Unit) {
+fun HomeScreen(
+    onGoToPests: () -> Unit,
+    onGoToGardens: () -> Unit
+) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Pantalla principal", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(20.dp))
         Button(onClick = onGoToPests) {
             Text("Ver plagas externas")
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = onGoToGardens) {
+            Text("Ver mis jardines")
         }
     }
 }
