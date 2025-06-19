@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.moviles.agrocity">
 
+    <!-- Permisos generales -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -8,26 +10,40 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    
+    <!-- Permisos de ubicación -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:networkSecurityConfig="@xml/network_security_config">
 
-        <!-- MainActivity sin intent-filter -->
+        <!-- MainActivity -->
         <activity
             android:name=".MainActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:exported="false" />
 
-        <!-- LoginActivity sin intent-filter -->
+        <!-- LoginActivity -->
         <activity
             android:name=".viewmodel.LoginActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="true" />
 
-        <!-- GardenActivity con MAIN y LAUNCHER para que sea la pantalla inicial -->
+        <!-- GardenActivity -->
         <activity
             android:name=".GardenActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:exported="false" />
+
+        <!-- CalendarioActivity como pantalla principal -->
+        <activity
+            android:name=".CalendarioActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="true">
             <intent-filter>
@@ -39,12 +55,15 @@
         <!-- RegisterActivity -->
         <activity
             android:name=".viewmodel.RegisterActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:exported="false" />
 
         <!-- GeminiImageAnalysisActivity -->
         <activity
             android:name=".GeminiImageAnalysisActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:exported="false" />
     </application>
 
 </manifest>
+
