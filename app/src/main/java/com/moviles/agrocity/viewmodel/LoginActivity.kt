@@ -1,5 +1,6 @@
 package com.moviles.agrocity.viewmodel
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.moviles.agrocity.GeminiImageAnalysisActivity
+import com.moviles.agrocity.MainActivity
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
@@ -32,6 +34,14 @@ import kotlinx.coroutines.withContext
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val prefs = getSharedPreferences("AgroCityPrefs", MODE_PRIVATE)
+        val isLoggedIn = prefs.getBoolean("isLoggedIn", false)
+
+        if (isLoggedIn) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
         setContent {
             LoginScreen()
         }
@@ -139,6 +149,7 @@ fun LoginScreen() {
         }
     }
 }
+@SuppressLint("CommitPrefEdits")
 private fun loginUser(email: String, password: String, context: Context) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
@@ -146,23 +157,25 @@ private fun loginUser(email: String, password: String, context: Context) {
 
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
-                    showToast(context, "¡Bienvenido a AgroCity!")
+                    val body = response.body()
+                    val token = body?.get("token") as? String
 
-                    // Puedes dejar el Intent o comentarlo si no quieres avanzar
-                    // context.startActivity(Intent(context, MainActivity::class.java))
+                    if (!token.isNullOrEmpty()) {
+                        // Guardar token en SharedPreferences
+                        val prefs = context.getSharedPreferences("AgroCityPrefs", Context.MODE_PRIVATE)
+                        prefs.edit()
+                            .putString("authToken", token)
+                            .putBoolean("isLoggedIn", true)
 
-                    //para que luego de loguearse aparesca al garden activity
-                    //val intent = Intent(context, GardenActivity::class.java)
-                   // context.startActivity(intent)
-                    val intent = Intent(context, GeminiImageAnalysisActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    context.startActivity(intent)
 
-                    if (context is LoginActivity) {
-                        (context as LoginActivity).finish()
+                        showToast(context, "¡Bienvenido a AgroCity!")
+
+                        // Redirigir a MainActivity
+                        context.startActivity(Intent(context, MainActivity::class.java))
+                        (context as? ComponentActivity)?.finish()
+                    } else {
+                        showToast(context, "Token inválido")
                     }
-
-
                 } else {
                     when (response.code()) {
                         401 -> showToast(context, "Correo o contraseña incorrectos")
@@ -178,6 +191,7 @@ private fun loginUser(email: String, password: String, context: Context) {
         }
     }
 }
+
 
 private fun isValidEmail(email: String): Boolean {
     return Patterns.EMAIL_ADDRESS.matcher(email).matches()

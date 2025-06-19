@@ -3,7 +3,7 @@ import ApiService
 import com.moviles.agrocity.common.Constants.API_BASE_URL
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
+import com.moviles.agrocity.models.PestDto
 object RetrofitInstance {
     val api: ApiService by lazy {
         Retrofit.Builder()

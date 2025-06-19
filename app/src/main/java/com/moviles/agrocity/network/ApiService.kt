@@ -1,5 +1,6 @@
 import com.moviles.agrocity.models.Garden
 import com.moviles.agrocity.models.LoginDTO
+import com.moviles.agrocity.models.PestDto
 import com.moviles.agrocity.models.RegisterDTO
 import com.moviles.agrocity.models.User
 import okhttp3.MultipartBody
@@ -84,4 +85,9 @@ interface ApiService {
 
 
 
+    @GET("api/pest")
+    suspend fun getAllPests(): Response<List<PestDto>>
+
+    @GET("api/Pest/External")
+    suspend fun getExternalPests(): Response<List<PestDto>>
 }
