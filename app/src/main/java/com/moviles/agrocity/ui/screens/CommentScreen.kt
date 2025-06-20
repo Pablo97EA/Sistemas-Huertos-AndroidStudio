@@ -265,6 +265,7 @@ fun CommentItem(
                     text = fullName.ifBlank { "Usuario" },
                     style = MaterialTheme.typography.bodyMedium
                 )
+                
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = formatDate((comment.createdAt ?: Date()) as Date?),
