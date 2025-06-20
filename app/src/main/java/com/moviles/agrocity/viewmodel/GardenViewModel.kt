@@ -178,4 +178,25 @@ class GardenViewModel : ViewModel() {
             return tempFile
         }
     }
+
+    private val _selectedGarden = MutableStateFlow<Garden?>(null)
+    val selectedGarden: StateFlow<Garden?> = _selectedGarden
+
+    fun fetchGardenById(gardenId: Int = 1) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitInstance.api.getGardenById(gardenId)  // Cambia el tipo de retorno en la interfaz también
+                Log.d("GARDEN_API", "Jardín recibido: $response")
+                _selectedGarden.value = response.data
+            } catch (e: Exception) {
+                Log.e("GARDEN_API", "Error al obtener jardín", e)
+                _selectedGarden.value = null
+            }
+        }
+    }
+
+
+
+
+
 }
