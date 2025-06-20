@@ -1,8 +1,11 @@
 package com.moviles.agrocity.viewmodel
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.util.Patterns
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -205,7 +208,7 @@ private fun validateInputs(
     telephone: String,
     email: String,
     password: String,
-    context: android.content.Context
+    context: Context
 ): Boolean {
     return when {
         name.isEmpty() -> {
@@ -228,7 +231,7 @@ private fun validateInputs(
             showToast(context, "Ingrese su teléfono")
             false
         }
-        email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+        email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
             showToast(context, "Ingrese un correo electrónico válido")
             false
         }
@@ -248,7 +251,7 @@ private fun registerUser(
     telephone: String,
     email: String,
     password: String,
-    context: android.content.Context
+    context: Context
 ) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
@@ -285,6 +288,6 @@ private fun registerUser(
     }
 }
 
-private fun showToast(context: android.content.Context, message: String) {
-    android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_LONG).show()
+private fun showToast(context: Context, message: String) {
+    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 }

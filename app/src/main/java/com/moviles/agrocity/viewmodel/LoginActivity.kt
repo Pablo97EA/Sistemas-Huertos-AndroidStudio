@@ -1,7 +1,11 @@
 package com.moviles.agrocity.viewmodel
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Patterns
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -18,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.moviles.agrocity.MainActivity
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
@@ -28,9 +33,19 @@ import kotlinx.coroutines.withContext
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val prefs = getSharedPreferences("AgroCityPrefs", MODE_PRIVATE)
+        val isLoggedIn = prefs.getBoolean("isLoggedIn", false)
+
+        if (isLoggedIn) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
         setContent {
             LoginScreen()
         }
+
+
     }
 }
 
@@ -133,22 +148,44 @@ fun LoginScreen() {
         }
     }
 }
-private fun loginUser(email: String, password: String, context: android.content.Context) {
+
+@SuppressLint("CommitPrefEdits")
+private fun loginUser(email: String, password: String, context: Context) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
             val response = RetrofitInstance.api.loginUser(LoginDTO(email, password))
 
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
-                    showToast(context, "¡Bienvenido a AgroCity!")
-                    val intent = Intent(context, GeminiImageAnalysisActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    context.startActivity(intent)
+                    val body = response.body()
+                    val token = body?.get("token") as? String
+                    val userId = (body?.get("userId") as? Double)?.toInt()
+                    val name = body?.get("name") as? String
+                    val firstName = body?.get("firstName") as? String
+                    val surname = body?.get("surname") as? String
+                    val emailFromResponse = body?.get("email") as? String
 
-                    if (context is LoginActivity) {
-                        (context as LoginActivity).finish()
+                    if (!token.isNullOrEmpty() && userId != null) {
+                        // Guardar todos los datos en SharedPreferences
+                        val prefs = context.getSharedPreferences("AgroCityPrefs", Context.MODE_PRIVATE)
+                        prefs.edit()
+                            .putString("authToken", token)
+                            .putBoolean("isLoggedIn", true)
+                            .putInt("userId", userId)
+                            .putString("userName", name)
+                            .putString("userFirstName", firstName)
+                            .putString("userSurname", surname)
+                            .putString("userEmail", emailFromResponse)
+                            .apply()
+
+                        showToast(context, "¡Bienvenido a AgroCity!")
+
+                        // Redirigir a MainActivity
+                        context.startActivity(Intent(context, MainActivity::class.java))
+                        (context as? ComponentActivity)?.finish()
+                    } else {
+                        showToast(context, "Token o ID inválido")
                     }
-
                 } else {
                     when (response.code()) {
                         401 -> showToast(context, "Correo o contraseña incorrectos")
@@ -168,6 +205,6 @@ fun isValidEmail(email: String): Boolean {
     return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }
 
-private fun showToast(context: android.content.Context, message: String) {
-    android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_LONG).show()
+private fun showToast(context: Context, message: String) {
+    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 }
