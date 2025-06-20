@@ -36,6 +36,7 @@ class ForgotPasswordActivity : ComponentActivity() {
 fun ForgotPasswordScreen() {
     var email by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val activity = (context as? ComponentActivity)
 
     Column(
         modifier = Modifier
@@ -63,12 +64,15 @@ fun ForgotPasswordScreen() {
             shape = RoundedCornerShape(8.dp)
         )
 
+        // Botón Enviar
         Button(
             onClick = {
                 if (!isValidEmail(email)) {
                     showToast(context, "Ingrese un correo válido")
                 } else {
-                    sendResetEmail(email, context)
+                    sendResetEmail(email, context) {
+                        activity?.finish() // Regresar a login después de enviar
+                    }
                 }
             },
             modifier = Modifier
@@ -78,16 +82,28 @@ fun ForgotPasswordScreen() {
         ) {
             Text("Enviar enlace", color = Color.White)
         }
+
+        // Botón Volver
+        TextButton(
+            onClick = {
+                activity?.finish() // Regresar al login
+            },
+            modifier = Modifier.padding(top = 16.dp)
+        ) {
+            Text("Volver", color = Color(0xFF4CAF50))
+        }
     }
 }
 
-private fun sendResetEmail(email: String, context: android.content.Context) {
+
+private fun sendResetEmail(email: String, context: android.content.Context, onSuccess: () -> Unit) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
             val response = RetrofitInstance.api.forgotPassword(ForgotPasswordDTO(email))
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
                     showToast(context, "Revisa tu correo para recuperar la contraseña")
+                    onSuccess() // <- Aquí se regresa
                 } else {
                     showToast(context, "No se pudo enviar el correo. Intenta de nuevo.")
                 }
@@ -99,6 +115,7 @@ private fun sendResetEmail(email: String, context: android.content.Context) {
         }
     }
 }
+
 
 private fun showToast(context: android.content.Context, message: String) {
     android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_LONG).show()

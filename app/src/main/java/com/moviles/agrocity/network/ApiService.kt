@@ -28,7 +28,7 @@ interface ApiService {
     @GET("api/users/{id}")
     suspend fun getUserById(@Path("id") id: Int): Response<User>
 
-    @POST("auth/forgot-password")
+    @POST("api/acceso/ForgotPassword")
     suspend fun forgotPassword(@Body dto: ForgotPasswordDTO): Response<Void>
 
 
