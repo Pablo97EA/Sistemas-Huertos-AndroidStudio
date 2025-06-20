@@ -2,6 +2,7 @@ package com.moviles.agrocity.ui.screens
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import com.moviles.agrocity.alerts.safeToast
 import com.moviles.agrocity.common.Constants.IMAGES_BASE_URL
 import com.moviles.agrocity.models.Garden
 import com.moviles.agrocity.viewmodel.GardenViewModel
@@ -44,6 +46,8 @@ fun GardenScreen(viewModel: GardenViewModel = viewModel(), userId: Int) {
     var selectedGarden by remember { mutableStateOf<Garden?>(null) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
+    var gardenToDelete by remember { mutableStateOf<Garden?>(null) }
+
 
     LaunchedEffect(userId) {
         viewModel.fetchGardensByUser(userId)
@@ -51,7 +55,7 @@ fun GardenScreen(viewModel: GardenViewModel = viewModel(), userId: Int) {
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(title = { Text("Jardín") })
+            CenterAlignedTopAppBar(title = { Text("Huerto") })
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -62,7 +66,7 @@ fun GardenScreen(viewModel: GardenViewModel = viewModel(), userId: Int) {
                 },
                 containerColor = MaterialTheme.colorScheme.secondary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar Jardín")
+                Icon(Icons.Default.Add, contentDescription = "Agregar Huerto")
             }
         }
     ) { paddingValues ->
@@ -73,7 +77,7 @@ fun GardenScreen(viewModel: GardenViewModel = viewModel(), userId: Int) {
                     .fillMaxWidth(),
                 onClick = { viewModel.fetchGardensByUser(userId) }
             ) {
-                Text("Refrescar Jardines")
+                Text("Refrescar Huerto")
             }
             Spacer(modifier = Modifier.height(8.dp))
             GardenList(
@@ -84,10 +88,32 @@ fun GardenScreen(viewModel: GardenViewModel = viewModel(), userId: Int) {
                     showDialog = true
                 },
                 onDelete = { garden ->
-                    viewModel.deleteGarden(garden.gardenId)
+                    //viewModel.deleteGarden(garden.gardenId)
+                    gardenToDelete = garden
                 }
             )
         }
+    }
+
+    gardenToDelete?.let { garden ->
+        AlertDialog(
+            onDismissRequest = { gardenToDelete = null },
+            text = { Text("¿Desea eliminar el huerto '${garden.name}'?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteGarden(garden.gardenId)
+                    safeToast(context, "Huerto eliminado con éxito")
+                    gardenToDelete = null
+                }) {
+                    Text("Sí, eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { gardenToDelete = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 
     if (showDialog) {
@@ -100,10 +126,12 @@ fun GardenScreen(viewModel: GardenViewModel = viewModel(), userId: Int) {
             onSave = { garden ->
                 if (garden.gardenId == 0) {
                     viewModel.addGarden(garden, imageUri, context, userId)
+                    safeToast(context, "Huerto registrado con éxito")
                 } else {
                     viewModel.updateGarden(garden, imageUri, context, userId)
+                    safeToast(context, "Huerto actualizado con éxito")
                 }
-                viewModel.fetchGardensByUser(userId)
+
                 showDialog = false
                 imageUri = null
             },
@@ -147,7 +175,7 @@ fun GardenItem(
             Text(text = garden.name, style = MaterialTheme.typography.titleLarge)
             Text(text = garden.description, style = MaterialTheme.typography.bodyMedium)
             Text(text = "🌱 Created At: ${garden.createdAt}", style = MaterialTheme.typography.bodySmall)
-            garden.imageUrl?.let {
+            /*garden.imageUrl?.let {
                 Image(
                     painter = rememberAsyncImagePainter(IMAGES_BASE_URL + it),
                     contentDescription = "Garden Image",
@@ -158,7 +186,23 @@ fun GardenItem(
                     contentScale = ContentScale.Crop
                 )
                 Spacer(modifier = Modifier.width(16.dp))
+            }*/
+            garden.imageUrl?.takeIf { it.isNotBlank() }?.let {
+                runCatching {
+                    Image(
+                        painter = rememberAsyncImagePainter(IMAGES_BASE_URL + it),
+                        contentDescription = "Garden Image",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surface),
+                        contentScale = ContentScale.Crop
+                    )
+                }.onFailure { error ->
+                    Log.e("ImageLoadError", "Error cargando imagen: $it", error)
+                }
             }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -196,7 +240,6 @@ fun DatePickerModal(
         DatePicker(state = datePickerState)
     }
 }
-
 @Composable
 fun GardenDialog(
     garden: Garden?,
@@ -209,6 +252,7 @@ fun GardenDialog(
     var name by remember { mutableStateOf(garden?.name ?: "") }
     var description by remember { mutableStateOf(garden?.description ?: "") }
     var createdAt by remember { mutableStateOf(garden?.createdAt ?: "") }
+    var showConfirmSave by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -217,7 +261,7 @@ fun GardenDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (garden == null) "Agregar Jardín" else "Editar Jardín") },
+        title = { Text(if (garden == null) "Agregar huerto" else "Editar huerto") },
         text = {
             Column {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, singleLine = true)
@@ -259,25 +303,51 @@ fun GardenDialog(
         confirmButton = {
             Button(onClick = {
                 if (name.isBlank()) {
-                    Toast.makeText(context, "El nombre es obligatorio", Toast.LENGTH_SHORT).show()
+                    safeToast(context, "El nombre es obligatorio")
+
+                    //Toast.makeText(context, "El nombre es obligatorio", Toast.LENGTH_SHORT).show()
                     return@Button
                 }
-                val updatedGarden = Garden(
-                    gardenId = garden?.gardenId ?: 0,
-                    userId = userId,
-                    name = name.trim(),
-                    description = description.trim(),
-                    createdAt = createdAt,
-                    imageUrl = imageUri?.toString(),
-                    userName = garden?.userName
-                )
-                onSave(updatedGarden)
+                showConfirmSave = true  // SOLO MOSTRAR CONFIRMACIÓN, NO GUARDAR AÚN
             }) { Text("Guardar") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancelar") }
         }
     )
+
+    // Diálogo de confirmación
+    if (showConfirmSave) {
+        AlertDialog(
+            onDismissRequest = { showConfirmSave = false },
+
+            text = {
+                Text(if (garden == null) "¿Desea registrar este huerto?" else "¿Desea actualizar este huerto?")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val updatedGarden = Garden(
+                        gardenId = garden?.gardenId ?: 0,
+                        userId = userId,
+                        name = name.trim(),
+                        description = description.trim(),
+                        createdAt = createdAt,
+                        imageUrl = imageUri?.toString(),
+                        userName = garden?.userName
+                    )
+                    onSave(updatedGarden)
+                    showConfirmSave = false
+                }) {
+                    Text("Sí")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmSave = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     if (showDatePicker) {
         DatePickerModal(
@@ -292,3 +362,5 @@ fun GardenDialog(
         )
     }
 }
+
+

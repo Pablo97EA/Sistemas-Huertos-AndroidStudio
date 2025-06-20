@@ -19,6 +19,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import java.io.File
+import java.net.SocketTimeoutException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,11 +40,14 @@ class GardenViewModel : ViewModel() {
             try {
                 val response = RetrofitInstance.api.getGardensByUserId(userId)
                 _gardens.value = response
+
             } catch (e: Exception) {
                 Log.e("GardenViewModel", "Error al obtener los jardines: ${e.message}", e)
             }
         }
     }
+
+
     fun fetchGardens() {
         viewModelScope.launch {
             try {
@@ -95,7 +99,7 @@ class GardenViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 // Aseguramos que CreatedAt tenga formato ISO 8601 (yyyy-MM-dd)
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                /*val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 val createdAtString = try {
                     // Si garden.createdAt es String ya en formato ISO, úsalo directo
                     // Si es Date, formatealo aquí (aquí asumimos String, ajusta si tienes Date)
@@ -103,6 +107,9 @@ class GardenViewModel : ViewModel() {
                 } catch (e: Exception) {
                     // Si no se puede parsear, enviamos la fecha actual para no romper
                     dateFormat.format(Date())
+                }*/
+                val createdAtString = garden.createdAt.ifBlank {
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                 }
 
                 // Convertimos campos a RequestBody
@@ -110,6 +117,7 @@ class GardenViewModel : ViewModel() {
                 val namePart = garden.name.toRequestBody("text/plain".toMediaTypeOrNull())
                 val descriptionPart = (garden.description ?: "").toRequestBody("text/plain".toMediaTypeOrNull())
                 val createdAtPart = createdAtString.toRequestBody("text/plain".toMediaTypeOrNull())
+                //val createdAtPart = garden.createdAt.toRequestBody("text/plain".toMediaTypeOrNull())
 
                 // Convertir Uri a MultipartBody.Part si hay imagen nueva
                 val filePart = imageUri?.let {
@@ -128,13 +136,18 @@ class GardenViewModel : ViewModel() {
                     filePart
                 )
 
-                // Refrescar lista
+               /* _gardens.value = _gardens.value.map {
+                    if (it.gardenId == garden.gardenId) response else it
+                }*/
                 fetchGardensByUser(userId)
 
-                // Actualizar lista localmente
-                _gardens.value = _gardens.value.map {
-                    if (it.gardenId == garden.gardenId) response else it
-                }
+
+                Log.i("GardenViewModel", " Huerto actualizado: $response")
+
+
+
+                ///fetchGardensByUser(userId)
+
 
                 Log.i("ViewModelInfo", "Jardín actualizado exitosamente: $response")
             } catch (e: HttpException) {
