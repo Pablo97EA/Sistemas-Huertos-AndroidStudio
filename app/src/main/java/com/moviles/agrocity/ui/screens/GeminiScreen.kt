@@ -1,10 +1,8 @@
-package com.moviles.agrocity
+package com.moviles.agrocity.ui.screens
 
 import android.graphics.Bitmap
-import android.os.Bundle
-import androidx.activity.ComponentActivity
+import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -21,26 +19,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.permissions.*
+import com.moviles.agrocity.R
 import com.moviles.agrocity.network.GeminiClient
-
-class GeminiImageAnalysisActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            ImageAnalyzerScreen()
-        }
-    }
-}
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ImageAnalyzerScreen() {
+fun GeminiScreen() {
     val context = LocalContext.current
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     var result by remember { mutableStateOf("Toma una foto para analizar la planta") }
 
-    val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
-    val geminiClient = remember { GeminiClient(apiKey = "AIzaSyD_FIqvsukQPWJtkq1wVlrlL5TmMsdFHlg") }
+    val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+    val geminiClient = remember {
+        GeminiClient(apiKey = "AIzaSyD_FIqvsukQPWJtkq1wVlrlL5TmMsdFHlg")
+    }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) {
         it?.let {
@@ -84,16 +76,12 @@ fun ImageAnalyzerScreen() {
         Button(
             onClick = {
                 when {
-                    cameraPermissionState.status.isGranted -> {
-                        launcher.launch(null)
-                    }
+                    cameraPermissionState.status.isGranted -> launcher.launch(null)
                     cameraPermissionState.status.shouldShowRationale -> {
                         result = "La app necesita permiso para usar la cámara."
                         cameraPermissionState.launchPermissionRequest()
                     }
-                    else -> {
-                        cameraPermissionState.launchPermissionRequest()
-                    }
+                    else -> cameraPermissionState.launchPermissionRequest()
                 }
             },
             modifier = Modifier

@@ -1,4 +1,6 @@
+import com.moviles.agrocity.models.Comment
 import com.moviles.agrocity.models.Garden
+import com.moviles.agrocity.models.GardenResponse
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.models.PestDto
 import com.moviles.agrocity.models.RegisterDTO
@@ -45,10 +47,8 @@ interface ApiService {
 
 
 
-
     @GET("api/Garden/{gardenId}")
-    suspend fun getGardenById(@Path("gardenId") id: Int): Garden
-
+    suspend fun getGardenById(@Path("gardenId") id: Int): GardenResponse
 
     @Multipart
     @POST("api/Garden")
@@ -90,4 +90,23 @@ interface ApiService {
 
     @GET("api/Pest/External")
     suspend fun getExternalPests(): Response<List<PestDto>>
+
+    // Endpoints de comentarios
+    @GET("api/comments")
+    suspend fun getAllComments(): Response<List<Comment>>
+
+    @GET("api/comments/{id}")
+    suspend fun getCommentById(@Path("id") id: Int): Response<Comment>
+
+    @POST("api/comments")
+    suspend fun createComment(@Body comment: Comment): Response<Comment>
+
+    @PUT("api/comments/{id}")
+    suspend fun updateComment(@Path("id") id: Int, @Body comment: Comment): Response<Comment>
+
+    @DELETE("api/comments/{id}")
+    suspend fun deleteComment(@Path("id") id: Int): Response<Unit>
+
+    @GET("api/comments/garden/{gardenId}")
+    suspend fun getCommentsByPublication(@Path("gardenId") gardenId: Int): Response<List<Comment>>
 }

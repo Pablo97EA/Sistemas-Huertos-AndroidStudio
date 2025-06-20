@@ -15,7 +15,9 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun HomeScreen(
     onGoToPests: () -> Unit,
-    onGoToGardens: () -> Unit
+    onGoToGardens: () -> Unit,
+    onGoToGemini: () -> Unit,
+    onGoToComment: (Int) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Pantalla principal", style = MaterialTheme.typography.headlineMedium)
@@ -27,5 +29,16 @@ fun HomeScreen(
         Button(onClick = onGoToGardens) {
             Text("Ver mis jardines")
         }
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = onGoToGemini) { // <- nuevo botón
+            Text("Analizar cultivo (Gemini)")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = { onGoToComment(1) }) {
+            Text("Ver comentarios del jardín 1")
+        }
+
+
     }
 }

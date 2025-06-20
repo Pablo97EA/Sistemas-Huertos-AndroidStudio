@@ -22,7 +22,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.moviles.agrocity.GeminiImageAnalysisActivity
 import com.moviles.agrocity.MainActivity
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.network.RetrofitInstance
@@ -149,6 +148,7 @@ fun LoginScreen() {
         }
     }
 }
+
 @SuppressLint("CommitPrefEdits")
 private fun loginUser(email: String, password: String, context: Context) {
     CoroutineScope(Dispatchers.IO).launch {
@@ -159,14 +159,24 @@ private fun loginUser(email: String, password: String, context: Context) {
                 if (response.isSuccessful) {
                     val body = response.body()
                     val token = body?.get("token") as? String
+                    val userId = (body?.get("userId") as? Double)?.toInt()
+                    val name = body?.get("name") as? String
+                    val firstName = body?.get("firstName") as? String
+                    val surname = body?.get("surname") as? String
+                    val emailFromResponse = body?.get("email") as? String
 
-                    if (!token.isNullOrEmpty()) {
-                        // Guardar token en SharedPreferences
+                    if (!token.isNullOrEmpty() && userId != null) {
+                        // Guardar todos los datos en SharedPreferences
                         val prefs = context.getSharedPreferences("AgroCityPrefs", Context.MODE_PRIVATE)
                         prefs.edit()
                             .putString("authToken", token)
                             .putBoolean("isLoggedIn", true)
-
+                            .putInt("userId", userId)
+                            .putString("userName", name)
+                            .putString("userFirstName", firstName)
+                            .putString("userSurname", surname)
+                            .putString("userEmail", emailFromResponse)
+                            .apply()
 
                         showToast(context, "¡Bienvenido a AgroCity!")
 
@@ -174,7 +184,7 @@ private fun loginUser(email: String, password: String, context: Context) {
                         context.startActivity(Intent(context, MainActivity::class.java))
                         (context as? ComponentActivity)?.finish()
                     } else {
-                        showToast(context, "Token inválido")
+                        showToast(context, "Token o ID inválido")
                     }
                 } else {
                     when (response.code()) {
@@ -191,6 +201,7 @@ private fun loginUser(email: String, password: String, context: Context) {
         }
     }
 }
+
 
 
 private fun isValidEmail(email: String): Boolean {
