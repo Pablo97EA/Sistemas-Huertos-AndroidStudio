@@ -34,6 +34,7 @@ import coil.compose.rememberAsyncImagePainter
 @Composable
 fun HomeScreen(
     onGoToPests: () -> Unit,
+    onGoToPlants: () -> Unit,
     onGoToGardens: () -> Unit,
 
     viewModel: GardenViewModel = viewModel(),
@@ -50,6 +51,19 @@ fun HomeScreen(
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Pantalla principal", style = MaterialTheme.typography.headlineMedium)
 
+        Button(onClick = onGoToPests) {
+            Text("Ver plagas")
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Button(onClick = onGoToPlants) {
+            Text("Ver plantas externas")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(onClick = onGoToGardens) {
+            Text("Ver mis huertos")
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
         Text("Jardines públicos", style = MaterialTheme.typography.titleMedium)
@@ -59,6 +73,15 @@ fun HomeScreen(
             items(gardens) { garden ->
                 PublicGardenItem(garden)
             }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = onGoToGemini) {
+            Text("Analizar cultivo (Gemini)")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = { onGoToComment(1) }) {
+            Text("Ver comentarios del jardín 1")
         }
 
 
