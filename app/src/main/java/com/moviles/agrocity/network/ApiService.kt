@@ -1,3 +1,4 @@
+import com.moviles.agrocity.models.ForgotPasswordDTO
 import com.moviles.agrocity.models.Comment
 import com.moviles.agrocity.models.Garden
 import com.moviles.agrocity.models.GardenResponse
@@ -33,19 +34,15 @@ interface ApiService {
     @GET("api/users/{id}")
     suspend fun getUserById(@Path("id") id: Int): Response<User>
 
-
+    @POST("api/acceso/ForgotPassword")
+    suspend fun forgotPassword(@Body dto: ForgotPasswordDTO): Response<Void>
 
     //Garden
     @GET("api/Garden")
     suspend fun getGardens(): List<Garden>
 
-
     @GET("api/Garden/garden/{userId}")
     suspend fun getGardensByUserId(@Path("userId") id: Int): List<Garden>
-
-
-
-
 
     @GET("api/Garden/{gardenId}")
     suspend fun getGardenById(@Path("gardenId") id: Int): GardenResponse
@@ -74,16 +71,6 @@ interface ApiService {
 
     @DELETE("api/Garden/{gardenId}")
     suspend fun deleteGarden(@Path("gardenId") id: Int): Response<Unit>
-
-
-
-
-
-
-
-
-
-
 
     @GET("api/pest")
     suspend fun getAllPests(): Response<List<PestDto>>

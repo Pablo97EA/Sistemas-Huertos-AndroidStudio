@@ -142,7 +142,7 @@ fun LoginScreen() {
 
             TextButton(
                 onClick = {
-                    showToast(context, "Funcionalidad en desarrollo")
+                    context.startActivity(Intent(context, ForgotPasswordActivity::class.java))
                 }
             ) {
                 Text("Olvidé mi contraseña", color = Color(0xFF4CAF50))
@@ -205,11 +205,8 @@ private fun loginUser(email: String, password: String, context: Context) {
         }
     }
 }
-
-
-
-private fun isValidEmail(email: String): Boolean {
-    return Patterns.EMAIL_ADDRESS.matcher(email).matches()
+fun isValidEmail(email: String): Boolean {
+    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }
 
 private fun showToast(context: Context, message: String) {
