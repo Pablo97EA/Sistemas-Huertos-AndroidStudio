@@ -3,6 +3,7 @@ import com.moviles.agrocity.models.Garden
 import com.moviles.agrocity.models.GardenResponse
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.models.PestDto
+import com.moviles.agrocity.models.PlantDto
 import com.moviles.agrocity.models.RegisterDTO
 import com.moviles.agrocity.models.User
 import okhttp3.MultipartBody
@@ -71,19 +72,14 @@ interface ApiService {
         @Part file: MultipartBody.Part?
     ): Garden
 
-
     @DELETE("api/Garden/{gardenId}")
     suspend fun deleteGarden(@Path("gardenId") id: Int): Response<Unit>
 
+    @GET("api/plant")
+    suspend fun getAllPlants(): Response<List<PlantDto>>
 
-
-
-
-
-
-
-
-
+    @GET("api/plants/external")
+    suspend fun getExternalPlants(): Response<List<PlantDto>>
 
     @GET("api/pest")
     suspend fun getAllPests(): Response<List<PestDto>>

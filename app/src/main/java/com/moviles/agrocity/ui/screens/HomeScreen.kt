@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun HomeScreen(
     onGoToPests: () -> Unit,
+    onGoToPlants: () -> Unit,
     onGoToGardens: () -> Unit,
     onGoToGemini: () -> Unit,
     onGoToComment: (Int) -> Unit
@@ -25,12 +26,16 @@ fun HomeScreen(
         Button(onClick = onGoToPests) {
             Text("Ver plagas externas")
         }
+        Spacer(modifier = Modifier.height(20.dp))
+        Button(onClick = onGoToPlants) {
+            Text("Ver plantas externas")
+        }
         Spacer(modifier = Modifier.height(12.dp))
         Button(onClick = onGoToGardens) {
             Text("Ver mis jardines")
         }
         Spacer(modifier = Modifier.height(12.dp))
-        Button(onClick = onGoToGemini) { // <- nuevo botón
+        Button(onClick = onGoToGemini) {
             Text("Analizar cultivo (Gemini)")
         }
 

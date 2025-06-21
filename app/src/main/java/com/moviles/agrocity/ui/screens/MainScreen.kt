@@ -28,6 +28,7 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
         composable("home") {
             HomeScreen(
                 onGoToPests = { navController.navigate("pests") },
+                onGoToPlants = { navController.navigate("plants") },
                 onGoToGardens = { navController.navigate("gardens") },
                 onGoToGemini = { navController.navigate("gemini") },
                 onGoToComment = { gardenId -> navController.navigate("comment/$gardenId") }
@@ -37,6 +38,11 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
         // Pest
         composable("pests") {
             PestScreen()
+        }
+
+        // Plants
+        composable("plants") {
+            PlantScreen()
         }
 
         // Garden
