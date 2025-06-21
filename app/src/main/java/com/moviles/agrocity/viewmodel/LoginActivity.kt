@@ -8,6 +8,7 @@ import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -30,7 +32,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.moviles.agrocity.session.SessionManager
-
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
+import com.moviles.agrocity.R
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,13 +72,14 @@ fun LoginScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Título
-        Text(
-            text = "AGROCITY",
-            color = Color(0xFF4CAF50),
-            fontSize = 36.sp,
-            modifier = Modifier.padding(bottom = 48.dp)
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo de AgroCity",
+            modifier = Modifier
+                .size(180.dp)
+                .padding(bottom = 48.dp)
         )
+
 
         // Mensaje de bienvenida
         Text(
