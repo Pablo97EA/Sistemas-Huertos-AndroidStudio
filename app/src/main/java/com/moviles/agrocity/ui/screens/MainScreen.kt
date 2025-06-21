@@ -28,7 +28,7 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
         Icons.Filled.Warning,
         Icons.Filled.Star,
         Icons.Filled.Search,
-        Icons.Filled.Email // Cambia según tu preferencia
+        Icons.Filled.Email
     )
     val tabRoutes = listOf("home", "pests", "gardens", "gemini", "calendar")
 
@@ -37,54 +37,6 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
 
     val currentRoute = navBackStackEntry?.destination?.route
     val selectedTabIndex = tabRoutes.indexOfFirst { currentRoute?.startsWith(it) == true }.coerceAtLeast(0)
-
-        // Home
-        composable("home") {
-            HomeScreen(
-                onGoToPests = { navController.navigate("pests") },
-                onGoToPlants = { navController.navigate("plants") },
-                onGoToGardens = { navController.navigate("gardens") },
-                onGoToGemini = { navController.navigate("gemini") },
-                onGoToComment = { gardenId -> navController.navigate("comment/$gardenId") }
-            )
-        }
-
-        // Pest
-        composable("pests") {
-            PestScreen()
-        }
-
-        // Plants
-        composable("plants") {
-            PlantScreen()
-        }
-
-        // Garden
-        composable("gardens") {
-            GardenScreen(viewModel = gardenViewModel)
-        }
-
-        composable("gemini") {
-            GeminiScreen()
-        }
-
-        composable(
-            "comment/{gardenId}",
-            arguments = listOf(navArgument("gardenId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val gardenId = backStackEntry.arguments?.getInt("gardenId") ?: return@composable
-            val commentViewModel: CommentViewModel = viewModel()
-            val gardenViewModel: GardenViewModel = viewModel()
-
-            CommentScreen(
-                gardenId = gardenId,
-                commentViewModel = commentViewModel,
-                gardenViewModel = gardenViewModel
-            )
-        }
-
-
-
 
     Column(modifier = Modifier.fillMaxSize()) {
         TabSelector(
@@ -101,6 +53,7 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
             composable("home") {
                 HomeScreen(
                     onGoToPests = { navController.navigate("pests") },
+                    onGoToPlants = { navController.navigate("plants") },
                     onGoToGardens = { navController.navigate("gardens") },
                     onGoToGemini = { navController.navigate("gemini") },
                     onGoToComment = { gardenId -> navController.navigate("comment/$gardenId") }
@@ -109,6 +62,10 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
 
             composable("pests") {
                 PestScreen()
+            }
+
+            composable("plants") {
+                PlantScreen()
             }
 
             composable("gardens") {
