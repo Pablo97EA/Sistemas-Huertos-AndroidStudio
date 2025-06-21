@@ -28,7 +28,7 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
         Icons.Filled.Warning,
         Icons.Filled.Star,
         Icons.Filled.Search,
-        Icons.Filled.Email // Cambia según tu preferencia
+        Icons.Filled.Email
     )
     val tabRoutes = listOf("home", "pests", "gardens", "gemini", "calendar")
 
@@ -53,6 +53,7 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
             composable("home") {
                 HomeScreen(
                     onGoToPests = { navController.navigate("pests") },
+                    onGoToPlants = { navController.navigate("plants") },
                     onGoToGardens = { navController.navigate("gardens") },
                     onGoToGemini = { navController.navigate("gemini") },
                     onGoToComment = { gardenId -> navController.navigate("comment/$gardenId") }
@@ -61,6 +62,10 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
 
             composable("pests") {
                 PestScreen()
+            }
+
+            composable("plants") {
+                PlantScreen()
             }
 
             composable("gardens") {
