@@ -57,7 +57,7 @@ class PestViewModel(
                     externalPests = response.body() ?: emptyList()
                     errorMessage = null
                 } else {
-                    errorMessage = "Error al cargar plagas externas"
+                    errorMessage = "Error al cargar plagas"
                 }
             } catch (e: Exception) {
                 errorMessage = e.localizedMessage ?: "Error desconocido"

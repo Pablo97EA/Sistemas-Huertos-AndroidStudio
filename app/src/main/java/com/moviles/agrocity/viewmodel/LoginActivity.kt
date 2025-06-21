@@ -29,6 +29,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.moviles.agrocity.session.SessionManager
+
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,7 +142,7 @@ fun LoginScreen() {
 
             TextButton(
                 onClick = {
-                    showToast(context, "Funcionalidad en desarrollo")
+                    context.startActivity(Intent(context, ForgotPasswordActivity::class.java))
                 }
             ) {
                 Text("Olvidé mi contraseña", color = Color(0xFF4CAF50))
@@ -159,24 +161,26 @@ private fun loginUser(email: String, password: String, context: Context) {
                 if (response.isSuccessful) {
                     val body = response.body()
                     val token = body?.get("token") as? String
-                    val userId = (body?.get("userId") as? Double)?.toInt()
-                    val name = body?.get("name") as? String
-                    val firstName = body?.get("firstName") as? String
-                    val surname = body?.get("surname") as? String
-                    val emailFromResponse = body?.get("email") as? String
 
-                    if (!token.isNullOrEmpty() && userId != null) {
-                        // Guardar todos los datos en SharedPreferences
+                    if (!token.isNullOrEmpty()) {
+
+                        val userId = (body["userId"] as? Double)?.toInt()
+                        val name = body["name"] as? String
+                        val firstName = body["firstName"] as? String
+                        val surname = body["surname"] as? String
+
+                        SessionManager.token = token
+                        SessionManager.userId = userId
+                        SessionManager.name = name
+                        SessionManager.firstName = firstName
+                        SessionManager.surname = surname
+
+                        // Guardar token en SharedPreferences
                         val prefs = context.getSharedPreferences("AgroCityPrefs", Context.MODE_PRIVATE)
                         prefs.edit()
                             .putString("authToken", token)
                             .putBoolean("isLoggedIn", true)
-                            .putInt("userId", userId)
-                            .putString("userName", name)
-                            .putString("userFirstName", firstName)
-                            .putString("userSurname", surname)
-                            .putString("userEmail", emailFromResponse)
-                            .apply()
+
 
                         showToast(context, "¡Bienvenido a AgroCity!")
 
@@ -184,7 +188,7 @@ private fun loginUser(email: String, password: String, context: Context) {
                         context.startActivity(Intent(context, MainActivity::class.java))
                         (context as? ComponentActivity)?.finish()
                     } else {
-                        showToast(context, "Token o ID inválido")
+                        showToast(context, "Token inválido")
                     }
                 } else {
                     when (response.code()) {
@@ -201,11 +205,8 @@ private fun loginUser(email: String, password: String, context: Context) {
         }
     }
 }
-
-
-
-private fun isValidEmail(email: String): Boolean {
-    return Patterns.EMAIL_ADDRESS.matcher(email).matches()
+fun isValidEmail(email: String): Boolean {
+    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }
 
 private fun showToast(context: Context, message: String) {

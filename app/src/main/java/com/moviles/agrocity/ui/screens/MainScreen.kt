@@ -47,7 +47,7 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
 
         // Garden
         composable("gardens") {
-            GardenScreen(viewModel = gardenViewModel, userId = 1)
+            GardenScreen(viewModel = gardenViewModel)
         }
 
         composable("gemini") {

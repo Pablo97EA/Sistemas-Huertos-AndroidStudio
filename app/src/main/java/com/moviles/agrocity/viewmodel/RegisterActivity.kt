@@ -271,8 +271,11 @@ private fun registerUser(
 
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
-                    showToast(context, "¡Registro exitoso! Bienvenido ${user.name}")
-                    context.startActivity(Intent(context, MainActivity::class.java))
+                    showToast(context, "¡Registro exitoso! ${user.name}")
+                    val intent = Intent(context, LoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    context.startActivity(intent)
+
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Log.e("REGISTER_ERROR", "Error en registro: ${response.code()} - $errorBody")

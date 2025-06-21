@@ -1,7 +1,8 @@
 package com.moviles.agrocity.ui.screens
 
-import android.content.Context
+
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,19 +36,26 @@ import com.moviles.agrocity.models.Garden
 import com.moviles.agrocity.viewmodel.GardenViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import com.moviles.agrocity.session.SessionManager
+import coil.request.ImageRequest
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GardenScreen(viewModel: GardenViewModel = viewModel(), userId: Int) {
+fun GardenScreen(viewModel: GardenViewModel = viewModel()) {
     val gardens by viewModel.gardens.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     var selectedGarden by remember { mutableStateOf<Garden?>(null) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
+    var imagePreviewUrl by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(userId) {
-        viewModel.fetchGardensByUser(userId)
+
+
+    LaunchedEffect(Unit) {
+        SessionManager.userId?.let { viewModel.fetchGardensByUser(it) }
     }
+
 
     Scaffold(
         topBar = {
@@ -67,26 +75,21 @@ fun GardenScreen(viewModel: GardenViewModel = viewModel(), userId: Int) {
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
-            Button(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                onClick = { viewModel.fetchGardensByUser(userId) }
-            ) {
-                Text("Refrescar Jardines")
-            }
+
             Spacer(modifier = Modifier.height(8.dp))
             GardenList(
                 gardens = gardens,
                 onEdit = { garden ->
                     selectedGarden = garden
-                    imageUri = garden.imageUrl?.let { Uri.parse(it) }
+                    imagePreviewUrl = garden.imageUrl
+                    imageUri = null
                     showDialog = true
                 },
                 onDelete = { garden ->
                     viewModel.deleteGarden(garden.gardenId)
                 }
             )
+
         }
     }
 
@@ -96,22 +99,37 @@ fun GardenScreen(viewModel: GardenViewModel = viewModel(), userId: Int) {
             onDismiss = {
                 showDialog = false
                 imageUri = null
+                selectedGarden = null
             },
             onSave = { garden ->
-                if (garden.gardenId == 0) {
-                    viewModel.addGarden(garden, imageUri, context, userId)
+                val currentUserId = SessionManager.userId
+                if (currentUserId == null) {
+                    Toast.makeText(context, "Usuario no válido", Toast.LENGTH_SHORT).show()
                 } else {
-                    viewModel.updateGarden(garden, imageUri, context, userId)
+                    if (garden.gardenId == 0) {
+                        viewModel.addGarden(garden, imageUri, context, currentUserId)
+                    } else {
+                        viewModel.updateGarden(garden, imageUri, context, currentUserId)
+                    }
+
+
+                    viewModel.fetchGardensByUser(currentUserId)
+
+
+                    showDialog = false
+                    imageUri = null
+                    selectedGarden = null
+                    imagePreviewUrl = null
                 }
-                viewModel.fetchGardensByUser(userId)
-                showDialog = false
-                imageUri = null
             },
             imageUri = imageUri,
             onImageSelected = { uri -> imageUri = uri },
-            userId = userId
+            imagePreviewUrl = imagePreviewUrl
         )
     }
+
+
+
 }
 
 @Composable
@@ -146,19 +164,32 @@ fun GardenItem(
             }
             Text(text = garden.name, style = MaterialTheme.typography.titleLarge)
             Text(text = garden.description, style = MaterialTheme.typography.bodyMedium)
-            Text(text = "🌱 Created At: ${garden.createdAt}", style = MaterialTheme.typography.bodySmall)
+            Text(text = "🌱 Fecha: ${garden.createdAt}", style = MaterialTheme.typography.bodySmall)
+
             garden.imageUrl?.let {
+                val context = LocalContext.current
+                val imageUrlWithBypass = IMAGES_BASE_URL + it + "?ts=${System.currentTimeMillis()}"
+
+                val imageRequest = ImageRequest.Builder(context)
+                    .data(imageUrlWithBypass)
+                    .crossfade(true)
+                    .build()
+
+                val painter = rememberAsyncImagePainter(model = imageRequest)
+
                 Image(
-                    painter = rememberAsyncImagePainter(IMAGES_BASE_URL + it),
-                    contentDescription = "Garden Image",
+                    painter = painter,
+                    contentDescription = "Imagen del Jardín",
                     modifier = Modifier
                         .size(80.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.surface),
                     contentScale = ContentScale.Crop
                 )
+
                 Spacer(modifier = Modifier.width(16.dp))
             }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -204,16 +235,22 @@ fun GardenDialog(
     onSave: (Garden) -> Unit,
     imageUri: Uri?,
     onImageSelected: (Uri?) -> Unit,
-    userId: Int
+    imagePreviewUrl: String? // nuevo parámetro
+
 ) {
+
     var name by remember { mutableStateOf(garden?.name ?: "") }
     var description by remember { mutableStateOf(garden?.description ?: "") }
-    var createdAt by remember { mutableStateOf(garden?.createdAt ?: "") }
     var showDatePicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         onImageSelected(uri)
     }
+    var createdAt by remember {
+        mutableStateOf(garden?.createdAt?.substringBefore("T") ?: "")
+    }
+
+
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -244,6 +281,7 @@ fun GardenDialog(
                     Text("Seleccionar Imagen")
                 }
                 imageUri?.let {
+
                     Image(
                         painter = rememberAsyncImagePainter(it),
                         contentDescription = "Imagen seleccionada",
@@ -253,7 +291,19 @@ fun GardenDialog(
                             .align(Alignment.CenterHorizontally),
                         contentScale = ContentScale.Crop
                     )
+                } ?: imagePreviewUrl?.let { url ->
+                    val previewUrlBypass = IMAGES_BASE_URL + url + "?ts=" + System.currentTimeMillis()
+                    Image(
+                        painter = rememberAsyncImagePainter(previewUrlBypass),
+                        contentDescription = "Imagen previa",
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .size(120.dp)
+                            .align(Alignment.CenterHorizontally),
+                        contentScale = ContentScale.Crop
+                    )
                 }
+
             }
         },
         confirmButton = {
@@ -264,11 +314,11 @@ fun GardenDialog(
                 }
                 val updatedGarden = Garden(
                     gardenId = garden?.gardenId ?: 0,
-                    userId = userId,
+                    userId = SessionManager.userId ?: 0,
                     name = name.trim(),
                     description = description.trim(),
                     createdAt = createdAt,
-                    imageUrl = imageUri?.toString(),
+                    imageUrl = if (imageUri != null) null else imagePreviewUrl,
                     userName = garden?.userName
                 )
                 onSave(updatedGarden)
