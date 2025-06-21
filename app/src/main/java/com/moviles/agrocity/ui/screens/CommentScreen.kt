@@ -28,7 +28,6 @@ import com.moviles.agrocity.viewmodels.CommentViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommentScreen(
@@ -44,12 +43,15 @@ fun CommentScreen(
     var editingCommentId by remember { mutableStateOf<Int?>(null) }
     var editingCommentText by remember { mutableStateOf("") }
 
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("AgroCityPrefs", Context.MODE_PRIVATE)
+    val currentUserId = prefs.getInt("userId", 0)
+
     LaunchedEffect(gardenId) {
         gardenViewModel.fetchGardenById(gardenId)
         commentViewModel.fetchCommentsByGarden(gardenId)
     }
 
-    // Observa updateSuccess para limpiar el modo edición cuando se complete la actualización
     LaunchedEffect(uiState.updateSuccess) {
         if (uiState.updateSuccess) {
             editingCommentId = null
@@ -115,7 +117,6 @@ fun CommentScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
-            Log.d("CommentScreen", "Lista de comentarios actual: ${comments.size}")
 
             LazyColumn(
                 modifier = Modifier
@@ -129,7 +130,8 @@ fun CommentScreen(
                         onEdit = {
                             editingCommentId = comment.commentId
                             editingCommentText = comment.description ?: ""
-                        }
+                        },
+                        currentUserId = currentUserId // <-- Aquí se pasa
                     )
                 }
             }
@@ -163,14 +165,11 @@ fun CommentScreen(
                                 commentViewModel.updateComment(id, updated)
                             }
                         }
-                        // NO limpiar aquí: se hará en LaunchedEffect
                     }) {
                         Text("Guardar")
                     }
                 }
             } else {
-                val context = LocalContext.current
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -192,14 +191,10 @@ fun CommentScreen(
                     IconButton(
                         onClick = {
                             if (newCommentText.isNotBlank()) {
-
-                                val prefs = context.getSharedPreferences("AgroCityPrefs", Context.MODE_PRIVATE)
-                                val userId = prefs.getInt("userId", 0)
-
                                 commentViewModel.createComment(
                                     Comment(
                                         commentId = 0,
-                                        userId = userId,
+                                        userId = currentUserId,
                                         gardenId = gardenId,
                                         description = newCommentText,
                                         createdAt = null,
@@ -207,7 +202,8 @@ fun CommentScreen(
                                         name = null,
                                         firstName = null,
                                         surname = null,
-                                        user = null
+                                        user = null,
+                                        userName = null
                                     )
                                 )
                                 newCommentText = ""
@@ -225,12 +221,12 @@ fun CommentScreen(
         }
     }
 }
-
 @Composable
 fun CommentItem(
     comment: Comment,
     onDelete: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    currentUserId: Int
 ) {
     Row(
         modifier = Modifier
@@ -246,7 +242,7 @@ fun CommentItem(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
-                    text = comment.user?.name?.take(1)?.uppercase() ?: "U",
+                    text = comment.user?.name?.take(1)?.uppercase() ?: " ",
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -256,19 +252,21 @@ fun CommentItem(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val fullName = listOfNotNull(
-                    comment.user?.name,
-
-                ).joinToString(" ")
+                val baseName = comment.user?.name ?: comment.userName ?: "Usuario"
+                val displayName = if (!comment.firstName.isNullOrBlank()) {
+                    "$baseName ${comment.firstName}"
+                } else {
+                    baseName
+                }
 
                 Text(
-                    text = fullName.ifBlank { "Usuario" },
+                    text = displayName.ifBlank { "Usuario" },
                     style = MaterialTheme.typography.bodyMedium
                 )
-                
+
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = formatDate((comment.createdAt ?: Date()) as Date?),
+                    text = formatDate(comment.createdAt as Date?),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -289,26 +287,31 @@ fun CommentItem(
                 )
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(onClick = onEdit) {
-                    Text("Editar", style = MaterialTheme.typography.labelSmall)
-                }
-                TextButton(onClick = onDelete) {
-                    Text(
-                        "Eliminar",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
+            Log.d("CommentItem", "comment.userId = ${comment.userId}, currentUserId = $currentUserId")
+
+            if (comment.userId == currentUserId){
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onEdit) {
+                        Text("Editar", style = MaterialTheme.typography.labelSmall)
+                    }
+                    TextButton(onClick = onDelete) {
+                        Text(
+                            "Eliminar",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }
     }
 }
+
 
 fun formatDate(date: Date?): String {
     return date?.let {
