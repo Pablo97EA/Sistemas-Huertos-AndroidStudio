@@ -27,7 +27,7 @@ fun PestScreen(viewModel: PestViewModel = viewModel()) {
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Plagas Externas", style = MaterialTheme.typography.headlineMedium)
+        Text("Plagas", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(8.dp))
 

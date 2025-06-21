@@ -5,7 +5,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -14,21 +13,19 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import com.moviles.agrocity.ui.components.TabSelector
 import com.moviles.agrocity.viewmodels.CommentViewModel
 import com.moviles.agrocity.viewmodel.GardenViewModel
-import com.moviles.agrocity.viewmodel.PestViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainScreen(navController: NavHostController = rememberNavController()) {
-    val tabTitles = listOf("Inicio", "Plagas", "Jardines", "Gemini", "Calendario")
+    val tabTitles = listOf("Inicio", "Plagas", "Huertos", "Gemini", "Calendario")
     val tabIcons = listOf(
         Icons.Filled.Home,
         Icons.Filled.Warning,
         Icons.Filled.Star,
         Icons.Filled.Search,
-        Icons.Filled.Email // Cambia según tu preferencia
+        Icons.Filled.Email 
     )
     val tabRoutes = listOf("home", "pests", "gardens", "gemini", "calendar")
 

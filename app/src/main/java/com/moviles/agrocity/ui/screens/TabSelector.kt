@@ -1,6 +1,5 @@
-package com.moviles.agrocity.ui.components
+package com.moviles.agrocity.ui.screens
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable

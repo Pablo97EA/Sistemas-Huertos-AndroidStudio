@@ -50,11 +50,11 @@ fun HomeScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Pantalla principal", style = MaterialTheme.typography.headlineMedium)
+        Text("Bienvenido", style = MaterialTheme.typography.headlineMedium)
 
 
         Spacer(modifier = Modifier.height(24.dp))
-        Text("Jardines públicos", style = MaterialTheme.typography.titleMedium)
+        Text("Huertos", style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn {items(gardens) { garden ->
