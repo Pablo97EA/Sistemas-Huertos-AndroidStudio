@@ -30,8 +30,11 @@ class CommentViewModel : ViewModel() {
         return try {
             val response = apiService.getCommentsByPublication(gardenId)
             if (response.isSuccessful) {
+
                 val fetchedComments = response.body() ?: emptyList()
-                Log.d("CommentViewModel", "fetchCommentsByGarden: recibidos ${fetchedComments.size} comentarios")
+                fetchedComments.forEach {
+                    Log.d("CommentViewModel", ">> Comentario ${it.commentId} - userId=${it.userId}")
+                }
                 _comments.value = fetchedComments
                 _uiState.update { it.copy(isLoading = false, error = null) }
                 true
