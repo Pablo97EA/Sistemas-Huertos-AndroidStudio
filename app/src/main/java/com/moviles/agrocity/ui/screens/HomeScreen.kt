@@ -37,7 +37,7 @@ fun HomeScreen(
     onGoToPlants: () -> Unit,
     onGoToGardens: () -> Unit,
 
-    viewModel: GardenViewModel = viewModel()
+    viewModel: GardenViewModel = viewModel(),
     onGoToGemini: () -> Unit,
     onGoToComment: (Int) -> Unit
 
@@ -50,7 +50,6 @@ fun HomeScreen(
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Pantalla principal", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = onGoToPests) {
             Text("Ver plagas")
