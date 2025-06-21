@@ -49,17 +49,7 @@ fun HomeScreen(
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Pantalla principal", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(20.dp))
 
-        Button(onClick = onGoToPests) {
-            Text("Ver plagas")
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(onClick = onGoToGardens) {
-            Text("Ver mis huertos")
-        }
 
         Spacer(modifier = Modifier.height(24.dp))
         Text("Jardines públicos", style = MaterialTheme.typography.titleMedium)
@@ -69,15 +59,6 @@ fun HomeScreen(
             items(gardens) { garden ->
                 PublicGardenItem(garden)
             }
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Button(onClick = onGoToGemini) { // <- nuevo botón
-            Text("Analizar cultivo (Gemini)")
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        Button(onClick = { onGoToComment(1) }) {
-            Text("Ver comentarios del jardín 1")
         }
 
 
