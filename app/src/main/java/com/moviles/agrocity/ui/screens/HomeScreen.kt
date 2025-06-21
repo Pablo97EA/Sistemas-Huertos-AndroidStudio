@@ -36,7 +36,7 @@ fun HomeScreen(
     onGoToPests: () -> Unit,
     onGoToGardens: () -> Unit,
 
-    viewModel: GardenViewModel = viewModel()
+    viewModel: GardenViewModel = viewModel(),
     onGoToGemini: () -> Unit,
     onGoToComment: (Int) -> Unit
 
