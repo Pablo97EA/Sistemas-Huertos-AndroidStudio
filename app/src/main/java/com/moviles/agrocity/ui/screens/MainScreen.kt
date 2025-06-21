@@ -38,54 +38,6 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
     val currentRoute = navBackStackEntry?.destination?.route
     val selectedTabIndex = tabRoutes.indexOfFirst { currentRoute?.startsWith(it) == true }.coerceAtLeast(0)
 
-        // Home
-        composable("home") {
-            HomeScreen(
-                onGoToPests = { navController.navigate("pests") },
-                onGoToPlants = { navController.navigate("plants") },
-                onGoToGardens = { navController.navigate("gardens") },
-                onGoToGemini = { navController.navigate("gemini") },
-                onGoToComment = { gardenId -> navController.navigate("comment/$gardenId") }
-            )
-        }
-
-        // Pest
-        composable("pests") {
-            PestScreen()
-        }
-
-        // Plants
-        composable("plants") {
-            PlantScreen()
-        }
-
-        // Garden
-        composable("gardens") {
-            GardenScreen(viewModel = gardenViewModel)
-        }
-
-        composable("gemini") {
-            GeminiScreen()
-        }
-
-        composable(
-            "comment/{gardenId}",
-            arguments = listOf(navArgument("gardenId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val gardenId = backStackEntry.arguments?.getInt("gardenId") ?: return@composable
-            val commentViewModel: CommentViewModel = viewModel()
-            val gardenViewModel: GardenViewModel = viewModel()
-
-            CommentScreen(
-                gardenId = gardenId,
-                commentViewModel = commentViewModel,
-                gardenViewModel = gardenViewModel
-            )
-        }
-
-
-
-
     Column(modifier = Modifier.fillMaxSize()) {
         TabSelector(
             selectedIndex = selectedTabIndex,
