@@ -24,7 +24,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.rememberAsyncImagePainter
 
@@ -55,10 +57,12 @@ fun HomeScreen(
         Text("Jardines públicos", style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
 
-        LazyColumn {
-            items(gardens) { garden ->
-                PublicGardenItem(garden)
-            }
+        LazyColumn {items(gardens) { garden ->
+            PublicGardenItem(garden = garden, onCommentClick = { gardenId ->
+                onGoToComment(gardenId)
+            })
+        }
+
         }
 
 
@@ -66,11 +70,12 @@ fun HomeScreen(
 }
 
 @Composable
-fun PublicGardenItem(garden: Garden) {
-    Column(modifier = Modifier
-        .padding(8.dp)
-        .fillMaxWidth()) {
-
+fun PublicGardenItem(garden: Garden, onCommentClick: (Int) -> Unit) {
+    Column(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+    ) {
         garden.userName?.let {
             Text(text = "👤 Usuario: $it", style = MaterialTheme.typography.bodySmall)
         }
@@ -89,6 +94,25 @@ fun PublicGardenItem(garden: Garden) {
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
+            )
+        }
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Button(
+            onClick = { onCommentClick(garden.gardenId ?: 0) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(36.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFAAF683),
+                contentColor = Color.Black
+            ),
+            shape = MaterialTheme.shapes.small
+        ) {
+            Text(
+                text = "Comentar",
+                style = MaterialTheme.typography.labelMedium
             )
         }
 
