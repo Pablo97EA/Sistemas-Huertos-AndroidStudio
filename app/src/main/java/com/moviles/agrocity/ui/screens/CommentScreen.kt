@@ -23,6 +23,7 @@ import coil.compose.AsyncImage
 import com.moviles.agrocity.R
 import com.moviles.agrocity.common.Constants.IMAGES_BASE_URL
 import com.moviles.agrocity.models.Comment
+import com.moviles.agrocity.session.SessionManager
 import com.moviles.agrocity.viewmodel.GardenViewModel
 import com.moviles.agrocity.viewmodels.CommentViewModel
 import java.text.SimpleDateFormat
@@ -44,8 +45,8 @@ fun CommentScreen(
     var editingCommentText by remember { mutableStateOf("") }
 
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("AgroCityPrefs", Context.MODE_PRIVATE)
-    val currentUserId = prefs.getInt("userId", 0)
+    val currentUserId = SessionManager.userId ?: 0
+
 
     LaunchedEffect(gardenId) {
         gardenViewModel.fetchGardenById(gardenId)
