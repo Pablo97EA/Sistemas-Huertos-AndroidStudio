@@ -22,7 +22,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.moviles.agrocity.GeminiImageAnalysisActivity
 import com.moviles.agrocity.MainActivity
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.network.RetrofitInstance
@@ -151,6 +150,7 @@ fun LoginScreen() {
         }
     }
 }
+
 @SuppressLint("CommitPrefEdits")
 private fun loginUser(email: String, password: String, context: Context) {
     CoroutineScope(Dispatchers.IO).launch {
@@ -205,6 +205,7 @@ private fun loginUser(email: String, password: String, context: Context) {
         }
     }
 }
+
 
 
 private fun isValidEmail(email: String): Boolean {

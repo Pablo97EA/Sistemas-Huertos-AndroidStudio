@@ -35,7 +35,11 @@ import coil.compose.rememberAsyncImagePainter
 fun HomeScreen(
     onGoToPests: () -> Unit,
     onGoToGardens: () -> Unit,
+
     viewModel: GardenViewModel = viewModel()
+    onGoToGemini: () -> Unit,
+    onGoToComment: (Int) -> Unit
+
 ) {
     val gardens by viewModel.gardens.collectAsState()
 
@@ -66,6 +70,17 @@ fun HomeScreen(
                 PublicGardenItem(garden)
             }
         }
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = onGoToGemini) { // <- nuevo botón
+            Text("Analizar cultivo (Gemini)")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = { onGoToComment(1) }) {
+            Text("Ver comentarios del jardín 1")
+        }
+
+
     }
 }
 

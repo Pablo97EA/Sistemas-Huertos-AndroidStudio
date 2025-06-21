@@ -108,5 +108,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.orgjson)
     implementation ("com.google.accompanist:accompanist-permissions:0.30.1")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
 
 }
