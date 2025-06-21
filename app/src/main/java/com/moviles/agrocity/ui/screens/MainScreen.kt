@@ -19,15 +19,16 @@ import com.moviles.agrocity.viewmodel.GardenViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainScreen(navController: NavHostController = rememberNavController()) {
-    val tabTitles = listOf("Inicio", "Plagas", "Huertos", "Gemini", "Calendario")
+    val tabTitles = listOf("Inicio", "Plagas", "Huertos","Plantas", "Gemini", "Calendario")
     val tabIcons = listOf(
         Icons.Filled.Home,
         Icons.Filled.Warning,
         Icons.Filled.Star,
+        Icons.Filled.Info,
         Icons.Filled.Search,
         Icons.Filled.Email 
     )
-    val tabRoutes = listOf("home", "pests", "gardens", "gemini", "calendar")
+    val tabRoutes = listOf("home", "pests", "gardens","plants", "gemini", "calendar")
 
     val navBackStackEntry by navController.currentBackStackEntryFlow
         .collectAsState(initial = navController.currentBackStackEntry)
@@ -87,6 +88,10 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
                     gardenViewModel = gardenViewModel
                 )
             }
+            composable("plants") {
+                PlantScreen()
+            }
+
         }
     }
 }

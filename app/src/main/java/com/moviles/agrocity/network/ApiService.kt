@@ -4,6 +4,7 @@ import com.moviles.agrocity.models.Garden
 import com.moviles.agrocity.models.GardenResponse
 import com.moviles.agrocity.models.LoginDTO
 import com.moviles.agrocity.models.PestDto
+import com.moviles.agrocity.models.PlantDto
 import com.moviles.agrocity.models.RegisterDTO
 import com.moviles.agrocity.models.User
 import okhttp3.MultipartBody
@@ -77,6 +78,13 @@ interface ApiService {
 
     @GET("api/Pest/External")
     suspend fun getExternalPests(): Response<List<PestDto>>
+
+    @GET("plants")
+    suspend fun getAllPlants(): Response<List<PlantDto>>
+
+    @GET("api/plants/external")
+    suspend fun getExternalPlants(): Response<List<PlantDto>>
+
 
     // Endpoints de comentarios
     @GET("api/comments")

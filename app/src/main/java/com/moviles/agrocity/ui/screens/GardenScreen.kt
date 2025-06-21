@@ -59,7 +59,7 @@ fun GardenScreen(viewModel: GardenViewModel = viewModel()) {
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(title = { Text("Jardín") })
+            CenterAlignedTopAppBar(title = { Text("Huertos") })
         },
         floatingActionButton = {
             FloatingActionButton(

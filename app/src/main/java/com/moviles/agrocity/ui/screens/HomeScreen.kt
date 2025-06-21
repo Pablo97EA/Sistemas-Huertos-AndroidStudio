@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -37,11 +38,9 @@ import coil.compose.rememberAsyncImagePainter
 fun HomeScreen(
     onGoToPests: () -> Unit,
     onGoToGardens: () -> Unit,
-
     viewModel: GardenViewModel = viewModel(),
     onGoToGemini: () -> Unit,
     onGoToComment: (Int) -> Unit
-
 ) {
     val gardens by viewModel.gardens.collectAsState()
 
@@ -49,25 +48,39 @@ fun HomeScreen(
         viewModel.fetchGardens()
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Bienvenido", style = MaterialTheme.typography.headlineMedium)
-
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "¡Bienvenido!",
+            style = MaterialTheme.typography.headlineMedium,
+            color = Color(0xFF388E3C)
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
-        Text("Huertos", style = MaterialTheme.typography.titleMedium)
+
+        Text(
+            text = "Huertos",
+            style = MaterialTheme.typography.titleMedium,
+            color = Color(0xFF4CAF50)
+        )
+
         Spacer(modifier = Modifier.height(8.dp))
 
-        LazyColumn {items(gardens) { garden ->
-            PublicGardenItem(garden = garden, onCommentClick = { gardenId ->
-                onGoToComment(gardenId)
-            })
+        LazyColumn {
+            items(gardens) { garden ->
+                PublicGardenItem(
+                    garden = garden,
+                    onCommentClick = { gardenId -> onGoToComment(gardenId) }
+                )
+            }
         }
-
-        }
-
-
     }
 }
+
 
 @Composable
 fun PublicGardenItem(garden: Garden, onCommentClick: (Int) -> Unit) {
