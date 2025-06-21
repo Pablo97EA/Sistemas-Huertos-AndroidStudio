@@ -30,6 +30,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.moviles.agrocity.session.SessionManager
+
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -161,6 +163,18 @@ private fun loginUser(email: String, password: String, context: Context) {
                     val token = body?.get("token") as? String
 
                     if (!token.isNullOrEmpty()) {
+
+                        val userId = (body["userId"] as? Double)?.toInt()
+                        val name = body["name"] as? String
+                        val firstName = body["firstName"] as? String
+                        val surname = body["surname"] as? String
+
+                        SessionManager.token = token
+                        SessionManager.userId = userId
+                        SessionManager.name = name
+                        SessionManager.firstName = firstName
+                        SessionManager.surname = surname
+
                         // Guardar token en SharedPreferences
                         val prefs = context.getSharedPreferences("AgroCityPrefs", Context.MODE_PRIVATE)
                         prefs.edit()

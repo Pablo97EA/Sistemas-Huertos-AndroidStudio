@@ -1,7 +1,6 @@
 package com.moviles.agrocity.viewmodel
 
 
-
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -24,14 +23,12 @@ import java.util.Date
 import java.util.Locale
 import kotlin.collections.plus
 
+
 class GardenViewModel : ViewModel() {
 
 
     private val _gardens = MutableStateFlow<List<Garden>>(emptyList())
     val gardens: StateFlow<List<Garden>> = _gardens
-
-
-
 
 
     fun fetchGardensByUser(userId: Int) {
@@ -44,6 +41,7 @@ class GardenViewModel : ViewModel() {
             }
         }
     }
+
     fun fetchGardens() {
         viewModelScope.launch {
             try {
@@ -63,7 +61,8 @@ class GardenViewModel : ViewModel() {
                 val userIdPart = userId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
 
                 val namePart = garden.name.toRequestBody("text/plain".toMediaTypeOrNull())
-                val descriptionPart = garden.description.toRequestBody("text/plain".toMediaTypeOrNull())
+                val descriptionPart =
+                    garden.description.toRequestBody("text/plain".toMediaTypeOrNull())
                 val createdAtPart = garden.createdAt.toRequestBody("text/plain".toMediaTypeOrNull())
 
                 // Convertir Uri a MultipartBody.Part
@@ -89,37 +88,29 @@ class GardenViewModel : ViewModel() {
     }
 
 
-
-
+    // Reemplaza tu updateGarden con esto:
     fun updateGarden(garden: Garden, imageUri: Uri?, context: Context, userId: Int) {
         viewModelScope.launch {
             try {
-                // Aseguramos que CreatedAt tenga formato ISO 8601 (yyyy-MM-dd)
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 val createdAtString = try {
-                    // Si garden.createdAt es String ya en formato ISO, úsalo directo
-                    // Si es Date, formatealo aquí (aquí asumimos String, ajusta si tienes Date)
                     dateFormat.format(dateFormat.parse(garden.createdAt))
                 } catch (e: Exception) {
-                    // Si no se puede parsear, enviamos la fecha actual para no romper
                     dateFormat.format(Date())
                 }
 
-                // Convertimos campos a RequestBody
                 val userIdPart = userId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
                 val namePart = garden.name.toRequestBody("text/plain".toMediaTypeOrNull())
                 val descriptionPart = (garden.description ?: "").toRequestBody("text/plain".toMediaTypeOrNull())
                 val createdAtPart = createdAtString.toRequestBody("text/plain".toMediaTypeOrNull())
 
-                // Convertir Uri a MultipartBody.Part si hay imagen nueva
                 val filePart = imageUri?.let {
                     val file = FileUtils.getFileFromUri(context, it)
                     val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
                     MultipartBody.Part.createFormData("File", file.name, requestFile)
                 }
 
-                // Llamar a la API para actualizar jardín
-                val response = RetrofitInstance.api.updateGarden(
+                RetrofitInstance.api.updateGarden(
                     garden.gardenId,
                     userIdPart,
                     namePart,
@@ -127,26 +118,18 @@ class GardenViewModel : ViewModel() {
                     createdAtPart,
                     filePart
                 )
+                val updatedGardens = RetrofitInstance.api.getGardensByUserId(userId)
+                _gardens.value = updatedGardens
 
-                // Refrescar lista
-                fetchGardensByUser(userId)
-
-                // Actualizar lista localmente
-                _gardens.value = _gardens.value.map {
-                    if (it.gardenId == garden.gardenId) response else it
-                }
-
-                Log.i("ViewModelInfo", "Jardín actualizado exitosamente: $response")
+                Log.i("ViewModelInfo", "Jardín actualizado correctamente")
             } catch (e: HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
-                Log.e("ViewModelError", "HTTP Error: ${e.message()}, Response Body: $errorBody")
+                Log.e("ViewModelError", "HTTP Error: ${e.message()}, Body: $errorBody")
             } catch (e: Exception) {
                 Log.e("ViewModelError", "Error: ${e.message}", e)
             }
         }
     }
-
-
 
 
 
@@ -159,7 +142,10 @@ class GardenViewModel : ViewModel() {
                         _gardens.value = _gardens.value.filter { it.gardenId != id }
                         Log.i("GardenViewModel", "Garden deleted: $id")
                     } else {
-                        Log.e("GardenViewModel", "Error deleting garden: ${response.errorBody()?.string()}")
+                        Log.e(
+                            "GardenViewModel",
+                            "Error deleting garden: ${response.errorBody()?.string()}"
+                        )
                     }
                 } catch (e: Exception) {
                     Log.e("GardenViewModel", "Error deleting garden: ${e.message}")
